@@ -15,6 +15,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		return 0;
 	case WM_PAINT:
+		if (myGame) {
+			myGame->OnUpdate();
+			myGame->OnRender();
+		}
 		return 0;
 
 	case WM_KEYDOWN:
@@ -46,26 +50,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	windowClass.lpszClassName = L"LiGameFramework";
 	RegisterClassEx(&windowClass);
-	
-	Game* myGame = new Game();
-	
-	myGame->m_fontMgr->LoadFontFile("assets/msyhbd.ttc");
-	myGame->m_fontMgr->SetPixelSize(256, 256);
-
-	wchar_t ch = L'唐';
-	CharBufferInfo fbb = myGame->m_fontMgr->GetCharGlyph(ch);
-	wchar_t filename[10];
-	swprintf_s(filename, L"%c.png", ch);
-	myGame->m_imageMgr->SaveBufferAsPng(fbb, filename);
-
-	
 
 	m_hwnd = CreateWindow(windowClass.lpszClassName,
 		L"LiGameFramework", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
 		CW_USEDEFAULT, 800, 600, nullptr, nullptr, hInstance, nullptr);
 	
-	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(myGame));
 
+	Game* myGame = new Game(1280, 760, L"LiGF", m_hwnd);
+	myGame->OnInit();
+
+	
+	/*wchar_t filename[10];
+	swprintf_s(filename, L"%c.png", ch);
+	myGame->m_imageMgr->SaveBufferAsPng(fbb, filename);*/
+
+	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(myGame));
 	ShowWindow(m_hwnd, nCmdShow);
 
 	MSG msg = {};
@@ -77,5 +76,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 	}
 
+	myGame->OnDestroy();
 	return static_cast<char>(msg.wParam);
 }

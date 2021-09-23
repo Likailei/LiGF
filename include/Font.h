@@ -6,6 +6,7 @@
 
 #include "ft2build.h"
 #include FT_FREETYPE_H
+
 #include "stdafx.h"
 
 class Font
@@ -15,11 +16,14 @@ public:
 	Font(const char* fileName);
 	~Font();
 	
-	void SetCharSize(long fontWidth, UINT dpi);
-	void SetPixelSize(long fontWidth, long fontHeight);
-	CharBufferInfo GetCharGlyph(wchar_t ch);
+	void SetCharSize(long charPointSize, UINT dpi);
+	void SetPixelSize(long charPixelWidth, long charPixelHeight);
+	CharBufferInfo LoadCharBboxBitmapToBuffer(wchar_t ch);
+	StringBufferInfo GetHoriString(const std::wstring str);
+	TextureInfo GetTextureRGBA(wchar_t ch, std::vector<UINT8>& data);
 
 	void LoadFontFile(const char* fileName);
+	
 private:
 	static const size_t DefaultButterSize = 4 * 1024 * 1024;
 	FT_Library m_library;

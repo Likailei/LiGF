@@ -37,7 +37,7 @@ void Font::SetPixelSize(long charPixelWidth, long charPixelHeight)
 	ThrowIfFailed(FT_Set_Pixel_Sizes(m_face, charPixelWidth, charPixelHeight));
 }
 
-CharBufferInfo Font::GetCharGlyph(wchar_t ch)
+CharBufferInfo Font::LoadCharBboxBitmapToBuffer(wchar_t ch)
 {
 	auto search = m_charMap.find(ch);
 	if (search != m_charMap.end()) {
@@ -56,9 +56,58 @@ CharBufferInfo Font::GetCharGlyph(wchar_t ch)
 		UINT8* start = m_currentPtr;
 		memcpy(m_currentPtr, m_face->glyph->bitmap.buffer, needSize);
 		m_currentPtr += needSize;
-		CharBufferInfo cbi{ ch, m_face->glyph->bitmap.rows, m_face->glyph->bitmap.width, m_face->glyph->bitmap.pitch, start };
+		CharBufferInfo cbi
+		{	ch,
+			m_face->glyph->bitmap.rows,
+			m_face->glyph->bitmap.width,
+			m_face->glyph->bitmap.pitch,
+			m_face->glyph->metrics.horiAdvance,
+			m_face->glyph->metrics.vertAdvance,
+			start
+		};
 		m_charMap.insert({ ch, cbi });
-		
+
 		return cbi;
 	}
+}
+
+StringBufferInfo Font::GetHoriString(const std::wstring str)
+{
+	std::vector<CharBufferInfo> cbis;
+	for (auto ch : str) {
+		cbis.push_back(LoadCharBboxBitmapToBuffer(ch));
+	}
+
+	StringBufferInfo sbi{0};
+	return sbi;
+	//for (auto cbi : cbis) {
+	//	sbi.
+	//}
+}
+
+TextureInfo Font::GetTextureRGBA(wchar_t ch, std::vector<UINT8>& data)
+{
+	TextureInfo ti{};
+
+	CharBufferInfo cbi = LoadCharBboxBitmapToBuffer(ch);
+	for (int y = 0; y < cbi.rows; y++) {
+		for (int x = 0; x < cbi.width; x++) {
+			UINT8 gray = *(cbi.buffer + cbi.width*y + x);
+			// 60,179,113
+			UINT8 r = (UINT8)(gray / 255.0 * 60);
+			UINT8 g = (UINT8)(gray / 255.0 * 179);
+			UINT8 b = (UINT8)(gray / 255.0 * 113);
+
+			data.push_back(r);
+			data.push_back(g);
+			data.push_back(b);
+			data.push_back(gray);
+		}
+	}
+	ti.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	ti.pixelWidth = 4;
+	ti.width = cbi.width;
+	ti.height = cbi.rows;
+	ti.rowPitch = ti.width * ti.pixelWidth;
+	return ti;
 }
