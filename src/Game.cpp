@@ -276,6 +276,7 @@ void Game::LoadAssets()
 
     // Create the texture.
     {
+        std::vector<UINT8> img = LoadTextureFromImg(L"./assets/img1.jpg");
 
         CharBufferInfo cbi = GetCharTexture(L'ÌÆ', 256);
 
@@ -459,4 +460,13 @@ CharBufferInfo Game::GetCharTexture(wchar_t ch, UINT size)
    
     CharBufferInfo cbi = m_fontMgr->GetCharBitmapInfo(ch);
     return cbi;
+}
+
+std::vector<UINT8>& Game::LoadTextureFromImg(const wchar_t* fileName)
+{
+    std::vector<UINT8> data;
+    m_imageMgr->InitDecoderFromFile(fileName);
+    auto frameCnt = m_imageMgr->GetFrames();
+    // TODO
+    return data;
 }

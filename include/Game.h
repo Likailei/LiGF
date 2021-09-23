@@ -84,5 +84,6 @@ private:
     void WaitForGpu();
     void MoveToNextFrame();
     CharBufferInfo GetCharTexture(wchar_t ch, UINT size);
+    std::vector<UINT8>& LoadTextureFromImg(const wchar_t* fileName);
 };
 #endif // !_GAME_H_
