@@ -32,12 +32,12 @@ void Font::SetCharSize(long charPointSize, UINT dpi)
 	ThrowIfFailed(FT_Set_Char_Size(m_face, charPointSize*64, 0, dpi, 0));
 }
 
-void Font::SetPixelSize(long charPixelWidth, long charPixelHeight)
+void Font::SetPixelSize(long charPixelWidth, UINT charPixelHeight)
 {
 	ThrowIfFailed(FT_Set_Pixel_Sizes(m_face, charPixelWidth, charPixelHeight));
 }
 
-CharBufferInfo Font::LoadCharBboxBitmapToBuffer(wchar_t ch)
+CharBufferInfo Font::GetCharBitmapInfo(wchar_t ch)
 {
 	auto search = m_charMap.find(ch);
 	if (search != m_charMap.end()) {
@@ -75,7 +75,7 @@ StringBufferInfo Font::GetHoriString(const std::wstring str)
 {
 	std::vector<CharBufferInfo> cbis;
 	for (auto ch : str) {
-		cbis.push_back(LoadCharBboxBitmapToBuffer(ch));
+		cbis.push_back(GetCharBitmapInfo(ch));
 	}
 
 	StringBufferInfo sbi{0};
@@ -89,9 +89,9 @@ TextureInfo Font::GetTextureRGBA(wchar_t ch, std::vector<UINT8>& data)
 {
 	TextureInfo ti{};
 
-	CharBufferInfo cbi = LoadCharBboxBitmapToBuffer(ch);
-	for (int y = 0; y < cbi.rows; y++) {
-		for (int x = 0; x < cbi.width; x++) {
+	CharBufferInfo cbi = GetCharBitmapInfo(ch);
+	for (UINT y = 0; y < cbi.rows; y++) {
+		for (UINT x = 0; x < cbi.width; x++) {
 			UINT8 gray = *(cbi.buffer + cbi.width*y + x);
 			// 60,179,113
 			UINT8 r = (UINT8)(gray / 255.0 * 60);

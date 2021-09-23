@@ -83,6 +83,6 @@ private:
     void PopulateCommandList();
     void WaitForGpu();
     void MoveToNextFrame();
-    CharBufferInfo GenerateTextureData();
+    CharBufferInfo GetCharTexture(wchar_t ch, UINT size);
 };
 #endif // !_GAME_H_

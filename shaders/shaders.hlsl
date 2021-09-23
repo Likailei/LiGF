@@ -29,5 +29,9 @@ PSInput VSMain(float4 position : POSITION, float4 uv : TEXCOORD)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return g_texture.Sample(g_sampler, input.uv);
+    
+    float4 gray = g_texture.Sample(g_sampler, input.uv);
+    float4 textColor = float4(0.4980f, 1.0000f, 0.6667f, 1.0f);
+
+    return textColor * gray.x;
 }

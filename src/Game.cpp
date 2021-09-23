@@ -177,7 +177,11 @@ void Game::LoadAssets()
     psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
     psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-    psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+
+    auto blendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+    blendState.AlphaToCoverageEnable = true;
+    psoDesc.BlendState = blendState;
+
     psoDesc.DepthStencilState.DepthEnable = FALSE;
     psoDesc.DepthStencilState.StencilEnable = FALSE;
     psoDesc.SampleMask = UINT_MAX;
@@ -190,12 +194,13 @@ void Game::LoadAssets()
     ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
 
     // Define the geometry for a triangle.
+    float scale = 0.5f / 1.0f;
     Vertex triangleVertices[] =
     {
-        { { -0.5f,  0.5f * m_aspectRatio, 0.5f }, {0.0f, 0.0f} },
-        { {0.5f, -0.5f * m_aspectRatio, 0.5f }, { 1.0f, 1.0f }},
-        { {-0.5f, -0.5f * m_aspectRatio, 0.5f }, { 0.0f, 1.0f }},
-        { {0.5f,  0.5f * m_aspectRatio, 0.5f }, { 1.0f, 0.0f }}
+        { { -scale,  scale * m_aspectRatio, scale }, {0.0f, 0.0f} },
+        { {scale, -scale * m_aspectRatio, scale }, { 1.0f, 1.0f }},
+        { {-scale, -scale * m_aspectRatio, scale }, { 0.0f, 1.0f }},
+        { {scale,  scale * m_aspectRatio, scale }, { 1.0f, 0.0f }}
     };
     const UINT vertexBufferSize = sizeof(triangleVertices);
 
@@ -271,23 +276,20 @@ void Game::LoadAssets()
 
     // Create the texture.
     {
-        // TODO: how to use freetype's pointsmap
 
-        CharBufferInfo cbi = GenerateTextureData();
-        std::vector<UINT8> pData;
-        TextureInfo ti = m_fontMgr->GetTextureRGBA(L'öÎ', pData);
+        CharBufferInfo cbi = GetCharTexture(L'ÌÆ', 256);
 
         D3D12_SUBRESOURCE_DATA textureData = {};
-        textureData.pData = pData.data();
-        textureData.RowPitch = ti.rowPitch;
-        textureData.SlicePitch = textureData.RowPitch * ti.height;
+        textureData.pData = cbi.buffer;
+        textureData.RowPitch = cbi.pitch;
+        textureData.SlicePitch = textureData.RowPitch * cbi.rows;
 
         // Describe and create a Texture2D.
         D3D12_RESOURCE_DESC textureDesc = {};
         textureDesc.MipLevels = 1;
-        textureDesc.Format = ti.format;
-        textureDesc.Width = ti.width;
-        textureDesc.Height = ti.height;
+        textureDesc.Format = DXGI_FORMAT_R8_UNORM;
+        textureDesc.Width = cbi.width;
+        textureDesc.Height = cbi.rows;
         textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
         textureDesc.DepthOrArraySize = 1;
         textureDesc.SampleDesc.Count = 1;
@@ -450,11 +452,11 @@ void Game::MoveToNextFrame()
     m_fenceValues[m_frameIndex] = currentFenceValue + 1;
 }
 
-CharBufferInfo Game::GenerateTextureData()
+CharBufferInfo Game::GetCharTexture(wchar_t ch, UINT size)
 {
     m_fontMgr->LoadFontFile("assets/msyhbd.ttc");
-    m_fontMgr->SetPixelSize(256, 256);
+    m_fontMgr->SetPixelSize(size, size);
    
-    CharBufferInfo cbi = m_fontMgr->LoadCharBboxBitmapToBuffer(L'A');
+    CharBufferInfo cbi = m_fontMgr->GetCharBitmapInfo(ch);
     return cbi;
 }
