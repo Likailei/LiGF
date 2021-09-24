@@ -7,6 +7,7 @@
 #include "Timer.h"
 #include "Image.h"
 #include "Font.h"
+#include "Input.h"
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -20,11 +21,13 @@ public:
 	virtual void OnUpdate();
 	virtual void OnRender();
 	virtual void OnDestroy();
+    
 	//virtual void OnKeyDown(UINT8 key);
-	//virtual void OnKeyUp(UINT8 key);
+	virtual void OnKeyUp(UINT8 key);
 
 	Image* m_imageMgr;
 	Font* m_fontMgr;
+    Input* m_inputMgr;
 
 private:
     static const UINT FrameCount = 3;
@@ -60,6 +63,8 @@ private:
     ComPtr<ID3D12DescriptorHeap> m_samplerHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
+
+    ComPtr<ID3D12Resource> textureUploadHeap;
 
     UINT m_numIndices;
     ComPtr<ID3D12Resource> m_vertexBuffer;

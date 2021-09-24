@@ -124,8 +124,10 @@
     <ClInclude Include="include\Interface.h" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="include\Timer.h" />
+    <ClInclude Include="include\Input.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Font.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Image.cpp" />
