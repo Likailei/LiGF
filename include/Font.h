@@ -19,7 +19,7 @@ public:
 	void SetCharSize(long charPointSize, UINT dpi);
 	void SetPixelSize(long charPixelWidth, UINT charPixelHeight);
 	CharBufferInfo GetCharBitmapInfo(wchar_t ch);
-	StringBufferInfo GetHoriString(const std::wstring str);
+	void GetHoriString(const std::wstring str, StringBufferInfo& sbi);
 	TextureInfo GetTextureRGBA(wchar_t ch, std::vector<UINT8>& data);
 
 	void LoadFontFile(const char* fileName);

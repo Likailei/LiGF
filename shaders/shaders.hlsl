@@ -31,7 +31,8 @@ float4 PSMain(PSInput input) : SV_TARGET
 {
     
     float4 gray = g_texture.Sample(g_sampler, input.uv);
-    float4 textColor = float4(0.4980f, 1.0000f, 0.6667f, 1.0f);
+    //float4 textColor = float4(0.4980f, 1.0000f, 0.6667f, 1.0f);
 
-    return textColor * gray.x;
+    //return textColor * gray.x;
+    return float4(1.0f, 0.0f, 0.0f, gray.x);
 }

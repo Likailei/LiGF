@@ -23,6 +23,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	Game* pGame = new Game(1280, 760, L"LiGF", m_hwnd);
 	pGame->OnInit();
+	
+
 	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pGame));
 
 	ShowWindow(m_hwnd, nCmdShow);

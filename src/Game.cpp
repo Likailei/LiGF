@@ -194,14 +194,21 @@ void Game::LoadAssets()
 
     ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
 
+    m_fontMgr->LoadFontFile("assets/STFANGSO.TTF");
+    m_fontMgr->SetPixelSize(256, 256);
+    StringBufferInfo sbi{};
+    m_fontMgr->GetHoriString(L"醉后不知天在水，满船清梦压星河", sbi);
+
+    m_aspectRatio = (float)sbi.width / (float)sbi.rows;
     // Define the geometry for a triangle.
-    float scale = 0.5f / 1.0f;
+    float scaleX = 0.8f / 1.0f;
+    float h = 0.06f;
     Vertex triangleVertices[] =
     {
-        { { -scale,  scale * m_aspectRatio, scale }, {0.0f, 0.0f} },
-        { {scale, -scale * m_aspectRatio, scale }, { 1.0f, 1.0f }},
-        { {-scale, -scale * m_aspectRatio, scale }, { 0.0f, 1.0f }},
-        { {scale,  scale * m_aspectRatio, scale }, { 1.0f, 0.0f }}
+        { { -h*m_aspectRatio,  h, 1.0f }, {0.0f, 0.0f} },
+        { {h * m_aspectRatio, -h, 1.0f }, { 1.0f, 1.0f }},
+        { {-h * m_aspectRatio, -h, 1.0f }, { 0.0f, 1.0f }},
+        { {h * m_aspectRatio,  h, 1.0f }, { 1.0f, 0.0f }}
     };
     const UINT vertexBufferSize = sizeof(triangleVertices);
 
@@ -276,21 +283,24 @@ void Game::LoadAssets()
 
     // Create the texture.
     {
-        std::vector<UINT8> img = LoadTextureFromImg(L"./assets/img1.jpg");
+        //std::vector<UINT8> img = LoadTextureFromImg(L"./assets/img1.jpg");
 
-        CharBufferInfo cbi = GetCharTexture(L'T', 256);
+        //CharBufferInfo cbi = GetCharTexture(L'T', 256);
+
+       
+        
 
         D3D12_SUBRESOURCE_DATA textureData = {};
-        textureData.pData = cbi.buffer;
-        textureData.RowPitch = cbi.pitch;
-        textureData.SlicePitch = textureData.RowPitch * cbi.rows;
+        textureData.pData = sbi.buffer;
+        textureData.RowPitch = sbi.pitch;
+        textureData.SlicePitch = textureData.RowPitch * sbi.rows;
 
         // Describe and create a Texture2D.
         D3D12_RESOURCE_DESC textureDesc = {};
         textureDesc.MipLevels = 1;
         textureDesc.Format = DXGI_FORMAT_R8_UNORM;
-        textureDesc.Width = cbi.width;
-        textureDesc.Height = cbi.rows;
+        textureDesc.Width = sbi.width;
+        textureDesc.Height = sbi.rows;
         textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
         textureDesc.DepthOrArraySize = 1;
         textureDesc.SampleDesc.Count = 1;
@@ -378,72 +388,72 @@ void Game::OnDestroy()
 
 void Game::OnKeyUp(UINT8 key)
 {
-    CharBufferInfo cbi = GetCharTexture(key, 256);
+   // CharBufferInfo cbi = GetCharTexture(key, 256);
 
-    D3D12_SUBRESOURCE_DATA textureData = {};
-    textureData.pData = cbi.buffer;
-    textureData.RowPitch = cbi.pitch;
-    textureData.SlicePitch = textureData.RowPitch * cbi.rows;
+   // D3D12_SUBRESOURCE_DATA textureData = {};
+   // textureData.pData = cbi.buffer;
+   // textureData.RowPitch = cbi.pitch;
+   // textureData.SlicePitch = textureData.RowPitch * cbi.rows;
 
-    // Describe and create a Texture2D.
-    D3D12_RESOURCE_DESC textureDesc = {};
-    textureDesc.MipLevels = 1;
-    textureDesc.Format = DXGI_FORMAT_R8_UNORM;
-    textureDesc.Width = cbi.width;
-    textureDesc.Height = cbi.rows;
-    textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-    textureDesc.DepthOrArraySize = 1;
-    textureDesc.SampleDesc.Count = 1;
-    textureDesc.SampleDesc.Quality = 0;
-    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+   // // Describe and create a Texture2D.
+   // D3D12_RESOURCE_DESC textureDesc = {};
+   // textureDesc.MipLevels = 1;
+   // textureDesc.Format = DXGI_FORMAT_R8_UNORM;
+   // textureDesc.Width = cbi.width;
+   // textureDesc.Height = cbi.rows;
+   // textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+   // textureDesc.DepthOrArraySize = 1;
+   // textureDesc.SampleDesc.Count = 1;
+   // textureDesc.SampleDesc.Quality = 0;
+   // textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
-    // TODO: use upload/place resource
-    m_texture.Reset();
-    ThrowIfFailed(m_device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-        D3D12_HEAP_FLAG_NONE,
-        &textureDesc,
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        nullptr,
-        IID_PPV_ARGS(&m_texture)));
+   // // TODO: use upload/place resource
+   // //m_texture.Reset();
+   // ThrowIfFailed(m_device->CreateCommittedResource(
+   //     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+   //     D3D12_HEAP_FLAG_NONE,
+   //     &textureDesc,
+   //     D3D12_RESOURCE_STATE_COPY_DEST,
+   //     nullptr,
+   //     IID_PPV_ARGS(&m_texture)));
 
-    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_texture.Get(), 0, 1);
+   // const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_texture.Get(), 0, 1);
 
-    // Create the GPU upload buffer.
-    ThrowIfFailed(m_device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-        D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&textureUploadHeap)));
+   // // Create the GPU upload buffer.
+   // ThrowIfFailed(m_device->CreateCommittedResource(
+   //     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+   //     D3D12_HEAP_FLAG_NONE,
+   //     &CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
+   //     D3D12_RESOURCE_STATE_GENERIC_READ,
+   //     nullptr,
+   //     IID_PPV_ARGS(&textureUploadHeap)));
 
-    WaitForGpu();
-    ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
-    ThrowIfFailed(m_commandList->Reset(m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get()));
+   // WaitForGpu();
+   // ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
+   // ThrowIfFailed(m_commandList->Reset(m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get()));
 
-    
-   // m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
-    UpdateSubresources(m_commandList.Get(), m_texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
-    m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+   // 
+   //// m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+   // UpdateSubresources(m_commandList.Get(), m_texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
+   // m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
-    // Describe and create a SRV for the texture.
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Format = textureDesc.Format;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = 1;
-    m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
+   // // Describe and create a SRV for the texture.
+   // D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+   // srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+   // srvDesc.Format = textureDesc.Format;
+   // srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+   // srvDesc.Texture2D.MipLevels = 1;
+   // m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
 
-    ThrowIfFailed(m_commandList->Close());
-    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
-    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+   // ThrowIfFailed(m_commandList->Close());
+   // ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+   // m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-    // Wait for the copy queue to complete execution of the command list.
-    m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]);
-    ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
-    WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
-    m_fenceValues[m_frameIndex]++;
+   // // Wait for the copy queue to complete execution of the command list.
+   // m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]);
+   // ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
+   // WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
+   // m_fenceValues[m_frameIndex]++;
 }
 
 void Game::PopulateCommandList()

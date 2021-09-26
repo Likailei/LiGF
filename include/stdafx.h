@@ -32,11 +32,12 @@ struct CharBufferInfo {
     int pitch;
     signed long advanceX;
     signed long advanceY;
+    signed long horiBearingY;
     unsigned char* buffer;
 };
 
 struct StringBufferInfo {
-    wchar_t* str;
+    const wchar_t* str;
     unsigned int rows;
     unsigned int width;
     int pitch;

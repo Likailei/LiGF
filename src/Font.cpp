@@ -61,8 +61,9 @@ CharBufferInfo Font::GetCharBitmapInfo(wchar_t ch)
 			m_face->glyph->bitmap.rows,
 			m_face->glyph->bitmap.width,
 			m_face->glyph->bitmap.pitch,
-			m_face->glyph->metrics.horiAdvance,
-			m_face->glyph->metrics.vertAdvance,
+			m_face->glyph->metrics.horiAdvance / 64,
+			m_face->glyph->metrics.vertAdvance / 64,
+			m_face->glyph->metrics.horiBearingY / 64,
 			start
 		};
 		m_charMap.insert({ ch, cbi });
@@ -71,18 +72,44 @@ CharBufferInfo Font::GetCharBitmapInfo(wchar_t ch)
 	}
 }
 
-StringBufferInfo Font::GetHoriString(const std::wstring str)
+void Font::GetHoriString(const std::wstring str, StringBufferInfo& sbi)
 {
 	std::vector<CharBufferInfo> cbis;
 	for (auto ch : str) {
 		cbis.push_back(GetCharBitmapInfo(ch));
 	}
 
-	StringBufferInfo sbi{0};
-	return sbi;
-	//for (auto cbi : cbis) {
-	//	sbi.
-	//}
+	signed long maxHoriBearingY = 0;
+	signed long maxUnderX = 0;
+	long strWidth = 0;
+
+	for (auto cbi : cbis) {
+		if (cbi.horiBearingY > maxHoriBearingY) maxHoriBearingY = cbi.horiBearingY;
+		if (cbi.rows - cbi.horiBearingY > maxUnderX) maxUnderX = cbi.rows - cbi.horiBearingY;
+		strWidth += cbi.advanceX;
+	}
+	long strHeight = maxHoriBearingY + maxUnderX;
+	
+	size_t strBytes = strHeight * strWidth;
+	sbi.buffer = new UINT8[strBytes]();
+	
+	// translate char to string buffer
+	UINT offsetX = 0;
+	for (auto& cbi : cbis) {
+		UINT offsetY = maxHoriBearingY - cbi.horiBearingY;
+		
+		for (UINT y = 0; y < cbi.rows; y++) {
+			UINT offsetSize = (offsetY+y) * strWidth + offsetX;
+			memcpy(sbi.buffer + offsetSize, cbi.buffer+y*cbi.pitch, cbi.pitch);
+		}
+		offsetX += cbi.advanceX;
+	}
+
+	sbi.width = strWidth;
+	sbi.rows = strHeight;
+	sbi.pitch = strWidth;
+	sbi.size = strBytes;
+	sbi.str = str.c_str();
 }
 
 TextureInfo Font::GetTextureRGBA(wchar_t ch, std::vector<UINT8>& data)

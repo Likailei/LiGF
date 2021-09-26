@@ -30,6 +30,8 @@ UINT Image::GetFrames()
 		m_pImageDecoder->GetFrame(i, &frame);
 		m_pFrames.push_back(frame);
 	}
+	/*WICPixelFormatGUID wpf;
+	m_pFrames[0]->GetPixelFormat(&wpf);*/
 
 	return frameCount;
 }
