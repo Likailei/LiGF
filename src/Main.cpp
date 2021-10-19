@@ -88,6 +88,14 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		}
 		return 0;
+	case WM_MOUSEMOVE:
+		pGame->OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		return 0;
+
+	case WM_MOUSEWHEEL:
+		pGame->OnMWheelRotate(wParam);
+		return 0;
+
 	case WM_PAINT:
 		pGame->OnUpdate();
 		pGame->OnRender();

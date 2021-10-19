@@ -10,6 +10,7 @@
 #define SAFE_RELEASE(p) if (p) (p)->Release()
 
 #include <Windows.h>
+#include <windowsx.h>
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -24,6 +25,8 @@
 #include <fstream>
 
 #include <wrl.h>
+
+using namespace DirectX;
 
 struct CharBufferInfo {
     wchar_t ch;
@@ -54,6 +57,10 @@ struct TextureInfo {
     UINT* data;
 };
 
+struct ConstBufferObject {
+    XMFLOAT4X4 mvpMat;
+};
+
 inline void ThrowIfFailed(HRESULT hr)
 {
     if (FAILED(hr))
@@ -63,6 +70,10 @@ inline void ThrowIfFailed(HRESULT hr)
         //OutputDebugStringA(str);
         throw std::runtime_error(str);
     }
+}
+
+inline float Clamp(float x, float low, float high) {
+    return x < low ? low : (x > high ? high : x);
 }
 
 #endif // !_STDAFX_H_

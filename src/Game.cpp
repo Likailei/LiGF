@@ -1,6 +1,6 @@
 #include "Game.h"
 
-Game::Game(UINT width, UINT height, std::wstring name, HWND hwnd):
+Game::Game(UINT width, UINT height, std::wstring name, HWND hwnd) :
     m_width(width),
     m_height(height),
     m_aspectRatio(static_cast<float>(width) / static_cast<float>(height)),
@@ -10,7 +10,8 @@ Game::Game(UINT width, UINT height, std::wstring name, HWND hwnd):
     m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
     m_frameCounter(0),
     m_fenceValues{},
-    m_rtvDescriptorSize(0)
+    m_rtvDescriptorSize(0),
+    m_camera(m_hwnd, 45.0f * XM_PI / 180.0f, XMVectorSet(0.0f, 0.0f, -20.0f, 0.0f))
 {
     m_imageMgr = new Image();
     m_fontMgr = new Font();
@@ -131,8 +132,9 @@ void Game::LoadAssets()
     CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
     ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 
-    CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+    CD3DX12_ROOT_PARAMETER1 rootParameters[2];
     rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+    rootParameters[1].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_VERTEX);
 
     D3D12_STATIC_SAMPLER_DESC sampler = {};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -183,8 +185,7 @@ void Game::LoadAssets()
     blendState.AlphaToCoverageEnable = true;
     psoDesc.BlendState = blendState;
 
-    psoDesc.DepthStencilState.DepthEnable = FALSE;
-    psoDesc.DepthStencilState.StencilEnable = FALSE;
+    psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
     psoDesc.SampleMask = UINT_MAX;
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     psoDesc.NumRenderTargets = 1;
@@ -338,6 +339,45 @@ void Game::LoadAssets()
         m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
     }
     
+    // Create constant buffer view
+    for (UINT8 n = 0; n < FrameCount; ++n) {
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_constBufferUploadHeaps[n])));
+
+        CD3DX12_RANGE range(0, 0);
+        ThrowIfFailed(m_constBufferUploadHeaps[n]->Map(0, &range, reinterpret_cast<void**>(&m_constBufferGPUAddress[n])));
+        memcpy(m_constBufferGPUAddress[n], &m_constBuffer, sizeof(ConstBufferObject));
+    }
+
+    // Create depth stencil view
+    {
+        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+        D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+        depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+        depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            &depthOptimizedClearValue,
+            IID_PPV_ARGS(&m_depthStencil)
+        ));
+
+        m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    }
+
     // Execute the command list.
     ThrowIfFailed(m_commandList->Close());
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
@@ -361,6 +401,9 @@ void Game::LoadAssets()
 
 void Game::OnUpdate()
 {
+    m_camera.GetTransWVPMat();
+    m_constBuffer.mvpMat = m_camera.mWVPMat;
+    memcpy(m_constBufferGPUAddress[m_frameIndex], &m_constBuffer, sizeof(ConstBufferObject));
 }
 
 // Render the scene.
@@ -388,72 +431,26 @@ void Game::OnDestroy()
 
 void Game::OnKeyUp(UINT8 key)
 {
-   // CharBufferInfo cbi = GetCharTexture(key, 256);
+}
 
-   // D3D12_SUBRESOURCE_DATA textureData = {};
-   // textureData.pData = cbi.buffer;
-   // textureData.RowPitch = cbi.pitch;
-   // textureData.SlicePitch = textureData.RowPitch * cbi.rows;
+void Game::OnMouseMove(WPARAM btnState, int x, int y)
+{
+    m_camera.OnMouseMove(btnState, x, y);
+}
 
-   // // Describe and create a Texture2D.
-   // D3D12_RESOURCE_DESC textureDesc = {};
-   // textureDesc.MipLevels = 1;
-   // textureDesc.Format = DXGI_FORMAT_R8_UNORM;
-   // textureDesc.Width = cbi.width;
-   // textureDesc.Height = cbi.rows;
-   // textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-   // textureDesc.DepthOrArraySize = 1;
-   // textureDesc.SampleDesc.Count = 1;
-   // textureDesc.SampleDesc.Quality = 0;
-   // textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+void Game::OnMouseUp(WPARAM btnState, int x, int y)
+{
+    m_camera.OnMouseUp(btnState, x, y);
+}
 
-   // // TODO: use upload/place resource
-   // //m_texture.Reset();
-   // ThrowIfFailed(m_device->CreateCommittedResource(
-   //     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-   //     D3D12_HEAP_FLAG_NONE,
-   //     &textureDesc,
-   //     D3D12_RESOURCE_STATE_COPY_DEST,
-   //     nullptr,
-   //     IID_PPV_ARGS(&m_texture)));
+void Game::OnMouseDown(WPARAM btnState, int x, int y)
+{
+    m_camera.OnMouseDown(btnState, x, y);
+}
 
-   // const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_texture.Get(), 0, 1);
-
-   // // Create the GPU upload buffer.
-   // ThrowIfFailed(m_device->CreateCommittedResource(
-   //     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-   //     D3D12_HEAP_FLAG_NONE,
-   //     &CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
-   //     D3D12_RESOURCE_STATE_GENERIC_READ,
-   //     nullptr,
-   //     IID_PPV_ARGS(&textureUploadHeap)));
-
-   // WaitForGpu();
-   // ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
-   // ThrowIfFailed(m_commandList->Reset(m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get()));
-
-   // 
-   //// m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
-   // UpdateSubresources(m_commandList.Get(), m_texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
-   // m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-
-   // // Describe and create a SRV for the texture.
-   // D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-   // srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-   // srvDesc.Format = textureDesc.Format;
-   // srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-   // srvDesc.Texture2D.MipLevels = 1;
-   // m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
-
-   // ThrowIfFailed(m_commandList->Close());
-   // ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
-   // m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-   // // Wait for the copy queue to complete execution of the command list.
-   // m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]);
-   // ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
-   // WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
-   // m_fenceValues[m_frameIndex]++;
+void Game::OnMWheelRotate(WPARAM btnState)
+{
+    m_camera.OnMouseWheelRotate(btnState);
 }
 
 void Game::PopulateCommandList()
@@ -475,6 +472,7 @@ void Game::PopulateCommandList()
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
     m_commandList->SetGraphicsRootDescriptorTable(0, m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->SetGraphicsRootConstantBufferView(1, m_constBufferUploadHeaps[m_frameIndex]->GetGPUVirtualAddress());
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
@@ -482,7 +480,10 @@ void Game::PopulateCommandList()
     m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
     // Record commands.
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };

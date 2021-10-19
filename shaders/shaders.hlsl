@@ -17,11 +17,16 @@ struct PSInput
 Texture2D g_texture : register(t0);
 SamplerState g_sampler : register(s0);
 
+cbuffer constantObj : register(b0)
+{
+    float4x4 wvpMat;
+};
+
 PSInput VSMain(float4 position : POSITION, float4 uv : TEXCOORD)
 {
     PSInput result;
 
-    result.position = position;
+    result.position = mul(position, wvpMat);
     result.uv = uv;
 
     return result;

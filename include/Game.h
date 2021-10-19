@@ -8,6 +8,7 @@
 #include "Image.h"
 #include "Font.h"
 #include "Input.h"
+#include "Camera.h"
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -23,7 +24,11 @@ public:
 	virtual void OnDestroy();
     
 	//virtual void OnKeyDown(UINT8 key);
-	virtual void OnKeyUp(UINT8 key);
+	void OnKeyUp(UINT8 key);
+    void OnMouseMove(WPARAM btnState, int x, int y);
+    void OnMouseUp(WPARAM btnState, int x, int y);
+    void OnMouseDown(WPARAM btnState, int x, int y);
+    void OnMWheelRotate(WPARAM btnState);
 
 	Image* m_imageMgr;
 	Font* m_fontMgr;
@@ -47,6 +52,10 @@ private:
         XMFLOAT2 uv;
     };
 
+    Camera m_camera;
+
+    ConstBufferObject m_constBuffer;
+
     // Pipeline objects.
     CD3DX12_VIEWPORT m_viewport;
     CD3DX12_RECT m_scissorRect;
@@ -64,6 +73,8 @@ private:
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
 
+    UINT8* m_constBufferGPUAddress[FrameCount];
+    ComPtr<ID3D12Resource> m_constBufferUploadHeaps[FrameCount];
     ComPtr<ID3D12Resource> textureUploadHeap;
 
     UINT m_numIndices;
