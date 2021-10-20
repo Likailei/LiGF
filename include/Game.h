@@ -29,6 +29,7 @@ public:
     void OnMouseUp(WPARAM btnState, int x, int y);
     void OnMouseDown(WPARAM btnState, int x, int y);
     void OnMWheelRotate(WPARAM btnState);
+    void OnInput(LPARAM lParam);
 
 	Image* m_imageMgr;
 	Font* m_fontMgr;

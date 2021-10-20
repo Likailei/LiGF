@@ -3,18 +3,28 @@
 #define _INPUT_H_
 
 #include "stdafx.h"
+#include "Camera.h"
 
 class Input
 {
 public:
 	Input();
 	~Input();
+	
+	struct MouseFlags {
+		bool MOUSE_LBUTTON_DOWN = false;
+		bool MOUSE_LBUTTON_UP = false;
+	};
 
-	UINT ParseInputData(LPARAM lParam);
+	MouseFlags m_mouseFlags;
+
 	RAWINPUT* const GetRawInput();
+	void DispatchInput(LPARAM lParam, Camera& camera);
 private:
 	RAWINPUTDEVICE m_rawInputDevices[2];
 	LPBYTE m_rawInput;
+
+	RAWINPUT* ParseInputData(LPARAM lParam);
 };
 
 #endif // !_INPUT_H_

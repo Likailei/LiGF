@@ -18,7 +18,7 @@ public:
 	void Reset();
 	void OnMouseDown(WPARAM btnState, int x, int y);
 	void OnMouseUp(WPARAM btnState, int x, int y);
-	void OnMouseMove(WPARAM btnState, int x, int y);
+	void OnMouseMove(USHORT btnFlag, int x, int y);
 	void OnMouseWheelRotate(WPARAM btnState);
 
 	void SetCameraPositin(XMVECTOR camPos) { mEye = camPos; }
@@ -40,7 +40,7 @@ private:
 
 	float mTheta = 1.5f*XM_PI;
 	float mPhi = XM_PIDIV4;
-	float mRadius = 5.0f;
+	float mRadius = 2.0f;
 	XMFLOAT3 mRotXYZ;
 
 	POINT mMousePos;

@@ -11,7 +11,7 @@ Game::Game(UINT width, UINT height, std::wstring name, HWND hwnd) :
     m_frameCounter(0),
     m_fenceValues{},
     m_rtvDescriptorSize(0),
-    m_camera(m_hwnd, 45.0f * XM_PI / 180.0f, XMVectorSet(0.0f, 0.0f, -20.0f, 0.0f))
+    m_camera(m_hwnd, m_aspectRatio, XMVectorSet(0.0f, 0.0f, -5.0f, 0.0f))
 {
     m_imageMgr = new Image();
     m_fontMgr = new Font();
@@ -351,6 +351,8 @@ void Game::LoadAssets()
 
         CD3DX12_RANGE range(0, 0);
         ThrowIfFailed(m_constBufferUploadHeaps[n]->Map(0, &range, reinterpret_cast<void**>(&m_constBufferGPUAddress[n])));
+        
+        memset(&m_constBuffer, 0, sizeof(ConstBufferObject));
         memcpy(m_constBufferGPUAddress[n], &m_constBuffer, sizeof(ConstBufferObject));
     }
 
@@ -401,6 +403,8 @@ void Game::LoadAssets()
 
 void Game::OnUpdate()
 {
+    /*XMFLOAT3 rot = XMFLOAT3(0.0f, 0.01f, 0.0f);
+    m_camera.GetRotMat(rot);*/
     m_camera.GetTransWVPMat();
     m_constBuffer.mvpMat = m_camera.mWVPMat;
     memcpy(m_constBufferGPUAddress[m_frameIndex], &m_constBuffer, sizeof(ConstBufferObject));
@@ -453,6 +457,11 @@ void Game::OnMWheelRotate(WPARAM btnState)
     m_camera.OnMouseWheelRotate(btnState);
 }
 
+void Game::OnInput(LPARAM lParam)
+{
+    m_inputMgr->DispatchInput(lParam, m_camera);
+}
+
 void Game::PopulateCommandList()
 {
     // Command list allocators can only be reset when the associated 
@@ -483,7 +492,7 @@ void Game::PopulateCommandList()
     CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
 
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    //m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
     // Record commands.
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };

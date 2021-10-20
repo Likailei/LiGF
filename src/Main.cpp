@@ -53,44 +53,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		return 0;
 	case WM_INPUT:
-		{
-		char str[1024];
-		pGame->m_inputMgr->ParseInputData(lParam);
-		RAWINPUT* raw = pGame->m_inputMgr->GetRawInput();
-		switch (raw->header.dwType)
-		{
-		case RIM_TYPEKEYBOARD:
-			sprintf_s(str, " Kbd: make=%04x Flags:%04x Reserved:%04x ExtraInformation:%08x, msg=%04x VK=%04x \n",
-				raw->data.keyboard.MakeCode,
-				raw->data.keyboard.Flags,
-				raw->data.keyboard.Reserved,
-				raw->data.keyboard.ExtraInformation,
-				raw->data.keyboard.Message,
-				raw->data.keyboard.VKey);			
-			OutputDebugStringA(str);
-			//if(raw->data.keyboard.Flags == RI_KEY_BREAK) 
-			pGame->OnKeyUp(raw->data.keyboard.VKey);
-			break;
-			
-		/*case RIM_TYPEMOUSE:
-			sprintf_s(str, "Mouse: usFlags=%04x ulButtons=%04x usButtonFlags=%04x usButtonData=%d ulRawButtons=%04x lLastX=%ld lLastY=%ld ulExtraInformation=%04x\r\n",
-				raw->data.mouse.usFlags,
-				raw->data.mouse.ulButtons,
-				raw->data.mouse.usButtonFlags,
-				(short)raw->data.mouse.usButtonData,
-				raw->data.mouse.ulRawButtons,
-				(long)raw->data.mouse.lLastX,
-				(long)raw->data.mouse.lLastY,
-				raw->data.mouse.ulExtraInformation);
-			OutputDebugStringA(str);
-			break;*/
-		default: break;
-		}
-		}
+		pGame->OnInput(lParam);
 		return 0;
-	case WM_MOUSEMOVE:
+	/*case WM_MOUSEMOVE:
 		pGame->OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-		return 0;
+		return 0;*/
 
 	case WM_MOUSEWHEEL:
 		pGame->OnMWheelRotate(wParam);

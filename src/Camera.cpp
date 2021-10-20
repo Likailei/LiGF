@@ -73,13 +73,13 @@ void Camera::OnMouseUp(WPARAM btnState, int x, int y)
 	ReleaseCapture();
 }
 
-void Camera::OnMouseMove(WPARAM btnState, int x, int y)
+void Camera::OnMouseMove(USHORT btnFlag, int x, int y)
 {
-	float detaX = mMousePos.x - x;
-	float detaY = mMousePos.y - y;
+	/*float detaX = mMousePos.x - x;
+	float detaY = mMousePos.y - y;*/
 	// Make each pixel correspond to a quarter of a degree.
-	float dx = XMConvertToRadians(0.5f * static_cast<float>(detaX));
-	float dy = XMConvertToRadians(0.5f * static_cast<float>(detaY));
+	float dx = XMConvertToRadians(0.025f * static_cast<float>(-x));
+	float dy = XMConvertToRadians(0.025f * static_cast<float>(-y));
 
 	// Update angles based on input to orbit camera around box.
 	mTheta += dx;
@@ -90,6 +90,7 @@ void Camera::OnMouseMove(WPARAM btnState, int x, int y)
 
 	mMousePos.x = x;
 	mMousePos.y = y;
+
 }
 
 void Camera::OnMouseWheelRotate(WPARAM btnState)
@@ -97,5 +98,5 @@ void Camera::OnMouseWheelRotate(WPARAM btnState)
 	short delta = GET_WHEEL_DELTA_WPARAM(btnState);
 	float r = delta < 0 ? 0.7f : -0.7f;
 	mRadius += r;
-	mRadius = Clamp(mRadius, 3.0f, 150.0f);
+	mRadius = Clamp(mRadius, 1.0f, 50.0f);
 }
