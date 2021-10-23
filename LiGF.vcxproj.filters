@@ -333,10 +333,13 @@
     <ClInclude Include="include\Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\tiny_gltf.h">
+    <ClInclude Include="include\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Camera.h">
+    <ClInclude Include="include\json.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\gltf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -365,10 +368,6 @@
     <ClCompile Include="src\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Font Include="C:\Windows\WinSxS\amd64_microsoft-windows-font-truetype-dengxian_31bf3856ad364e35_10.0.19041.1_none_12943c00d5608b44\Dengb.ttf" />
-    <Font Include="C:\Windows\Fonts\STFANGSO.TTF" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt" />

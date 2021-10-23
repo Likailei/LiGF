@@ -9,6 +9,7 @@
 #include "Font.h"
 #include "Input.h"
 #include "Camera.h"
+#include "Asset.h"
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;

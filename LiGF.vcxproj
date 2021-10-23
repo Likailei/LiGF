@@ -121,12 +121,13 @@
     <ClInclude Include="include\freetype\tttags.h" />
     <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="include\Game.h" />
+    <ClInclude Include="include\gltf.h" />
     <ClInclude Include="include\Image.h" />
     <ClInclude Include="include\Interface.h" />
+    <ClInclude Include="include\json.hpp" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="include\Timer.h" />
     <ClInclude Include="include\Input.h" />
-    <ClInclude Include="include\tiny_gltf.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
@@ -139,18 +140,15 @@
     <ClCompile Include="src\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Font Include="C:\Windows\Fonts\STFANGSO.TTF" />
-    <Font Include="C:\Windows\WinSxS\amd64_microsoft-windows-font-truetype-dengxian_31bf3856ad364e35_10.0.19041.1_none_12943c00d5608b44\Dengb.ttf" />
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="TODO.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{524933cd-1330-4880-ae24-78b1cbaeabfe}</ProjectGuid>
-    <RootNamespace>LiGameFramework</RootNamespace>
+    <RootNamespace>LiGF</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>LiGF</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -243,7 +241,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\Code\DX12\LiGameFramework\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Code\DX12\LiGF\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

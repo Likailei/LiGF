@@ -1,6 +1,4 @@
-﻿#include "stdafx.h"
-#include <iostream>
-#include "Game.h"
+﻿#include "Game.h"
 
 HWND m_hwnd;
 
@@ -13,13 +11,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	windowClass.lpfnWndProc = MainWndProc;
 	windowClass.hInstance = hInstance;
 	windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-	windowClass.lpszClassName = L"LiGameFramework";
+	windowClass.lpszClassName = L"LiGF";
 	RegisterClassEx(&windowClass);
 
 	m_hwnd = CreateWindow(windowClass.lpszClassName,
-		L"LiGameFramework", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+		L"LiGF", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
 		CW_USEDEFAULT, 800, 600, nullptr, nullptr, hInstance, nullptr);
 	
+	//Asset::LoadGLTF("millstone.gltf");
 
 	Game* pGame = new Game(1280, 760, L"LiGF", m_hwnd);
 	pGame->OnInit();
