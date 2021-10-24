@@ -35,6 +35,9 @@ public:
 	Image* m_imageMgr;
 	Font* m_fontMgr;
     Input* m_inputMgr;
+    Asset* m_assetMgr;
+
+    std::vector<UINT32> m_indexCounts;
 
 private:
     static const UINT FrameCount = 3;

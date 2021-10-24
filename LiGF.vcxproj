@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Asset.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\d3d12\d3dx12.h" />
     <ClInclude Include="include\d3d12\DirectXMath.h" />
@@ -130,6 +131,7 @@
     <ClInclude Include="include\Input.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Asset.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Font.cpp" />

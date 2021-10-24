@@ -19,6 +19,7 @@ public:
         uint8_t const* Data;
         UINT32 DataStride;
         UINT32 TotalSize;
+        UINT IndexCount;
 
         bool HasData() const noexcept
         {
@@ -30,9 +31,10 @@ public:
 	void UploadAssetsResource(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, D3D12_VERTEX_BUFFER_VIEW* vBufferView, D3D12_INDEX_BUFFER_VIEW* iBufferView);
 
 	static UINT32 CalculateDataTypeSize(fx::gltf::Accessor const& accessor) noexcept;
+    UINT32 InitSingleMesh(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, D3D12_VERTEX_BUFFER_VIEW* vBufferView, D3D12_INDEX_BUFFER_VIEW* iBufferView, UINT32 meshIndex);
 private:
 	static std::string GetFileExtension(const std::string fileName);
-    static BufferInfo GetData(fx::gltf::Document const& doc, fx::gltf::Accessor const& accessor);
+    BufferInfo GetData(fx::gltf::Document const& doc, fx::gltf::Accessor const& accessor);
     std::pair<UINT32, UINT32> CalculateMeshesTotalSize();
 
     fx::gltf::Document m_gltfScene{};

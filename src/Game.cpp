@@ -16,6 +16,7 @@ Game::Game(UINT width, UINT height, std::wstring name, HWND hwnd) :
     m_imageMgr = new Image();
     m_fontMgr = new Font();
     m_inputMgr = new Input();
+    m_assetMgr = new Asset();
 }
 
 void Game::OnInit()
@@ -195,6 +196,7 @@ void Game::LoadAssets()
 
     ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
 
+    /*
     m_fontMgr->LoadFontFile("assets/STFANGSO.TTF");
     m_fontMgr->SetPixelSize(256, 256);
     StringBufferInfo sbi{};
@@ -219,9 +221,9 @@ void Game::LoadAssets()
     };
     int iBufferSize = sizeof(iList);
 
-    // Note: using upload heaps to transfer static data like vert buffers is not 
-    // recommended. Every time the GPU needs it, the upload heap will be marshalled 
-    // over. Please read up on Default Heap usage. An upload heap is used here for 
+    // Note: using upload heaps to transfer static data like vert buffers is not
+    // recommended. Every time the GPU needs it, the upload heap will be marshalled
+    // over. Please read up on Default Heap usage. An upload heap is used here for
     // code simplicity and because there are very few verts to actually transfer.
     ThrowIfFailed(m_device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -242,7 +244,7 @@ void Game::LoadAssets()
     m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
     m_vertexBufferView.StrideInBytes = sizeof(Vertex);
     m_vertexBufferView.SizeInBytes = vertexBufferSize;
-    
+
     ComPtr<ID3D12Resource> indexBufferUploadHeap;
 
     // Create the index buffer.
@@ -264,7 +266,7 @@ void Game::LoadAssets()
             IID_PPV_ARGS(&indexBufferUploadHeap)));
 
 
-        // Copy data to the intermediate upload heap and then schedule a copy 
+        // Copy data to the intermediate upload heap and then schedule a copy
         // from the upload heap to the index buffer.
         D3D12_SUBRESOURCE_DATA indexData = {};
         indexData.pData = reinterpret_cast<UINT*>(iList);
@@ -280,7 +282,11 @@ void Game::LoadAssets()
         m_indexBufferView.SizeInBytes =iBufferSize;
 
         m_numIndices = iBufferSize / 4;    // R32_UINT (SampleAssets::StandardIndexFormat) = 4 bytes each.
-    }
+    }*/
+
+    m_assetMgr->LoadGLTF("./assets/millstone.gltf");
+    UINT32 indexCount = m_assetMgr->InitSingleMesh(m_device.Get(), m_commandList.Get(), &m_vertexBufferView, &m_indexBufferView, 3);
+    m_indexCounts.push_back(indexCount);
 
     // Create the texture.
     {
@@ -288,9 +294,9 @@ void Game::LoadAssets()
 
         //CharBufferInfo cbi = GetCharTexture(L'T', 256);
 
-       
-        
 
+
+        /*
         D3D12_SUBRESOURCE_DATA textureData = {};
         textureData.pData = sbi.buffer;
         textureData.RowPitch = sbi.pitch;
@@ -337,67 +343,68 @@ void Game::LoadAssets()
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
         m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
-    }
-    
+    }*/
+
     // Create constant buffer view
-    for (UINT8 n = 0; n < FrameCount; ++n) {
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_constBufferUploadHeaps[n])));
+        for (UINT8 n = 0; n < FrameCount; ++n) {
+            ThrowIfFailed(m_device->CreateCommittedResource(
+                &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+                D3D12_HEAP_FLAG_NONE,
+                &CD3DX12_RESOURCE_DESC::Buffer(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT),
+                D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr,
+                IID_PPV_ARGS(&m_constBufferUploadHeaps[n])));
 
-        CD3DX12_RANGE range(0, 0);
-        ThrowIfFailed(m_constBufferUploadHeaps[n]->Map(0, &range, reinterpret_cast<void**>(&m_constBufferGPUAddress[n])));
-        
-        memset(&m_constBuffer, 0, sizeof(ConstBufferObject));
-        memcpy(m_constBufferGPUAddress[n], &m_constBuffer, sizeof(ConstBufferObject));
-    }
+            CD3DX12_RANGE range(0, 0);
+            ThrowIfFailed(m_constBufferUploadHeaps[n]->Map(0, &range, reinterpret_cast<void**>(&m_constBufferGPUAddress[n])));
 
-    // Create depth stencil view
-    {
-        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-        depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-        D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-        depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-        depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-        depthOptimizedClearValue.DepthStencil.Stencil = 0;
-
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
-            D3D12_RESOURCE_STATE_DEPTH_WRITE,
-            &depthOptimizedClearValue,
-            IID_PPV_ARGS(&m_depthStencil)
-        ));
-
-        m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
-    }
-
-    // Execute the command list.
-    ThrowIfFailed(m_commandList->Close());
-    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
-    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-    // Create synchronization objects and wait until assets have been uploaded to the GPU.
-    {
-        ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-        m_fenceValues[m_frameIndex]++;
-
-        // Create an event handle to use for frame synchronization.
-        m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (m_fenceEvent == nullptr)
-        {
-            ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+            memset(&m_constBuffer, 0, sizeof(ConstBufferObject));
+            memcpy(m_constBufferGPUAddress[n], &m_constBuffer, sizeof(ConstBufferObject));
         }
 
-        WaitForGpu();
+        // Create depth stencil view
+        {
+            D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+            depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+            depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+            depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+            D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+            depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+            depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+            depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+            ThrowIfFailed(m_device->CreateCommittedResource(
+                &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+                D3D12_HEAP_FLAG_NONE,
+                &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+                D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                &depthOptimizedClearValue,
+                IID_PPV_ARGS(&m_depthStencil)
+            ));
+
+            m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+        }
+
+        // Execute the command list.
+        ThrowIfFailed(m_commandList->Close());
+        ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+        m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+        // Create synchronization objects and wait until assets have been uploaded to the GPU.
+        {
+            ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+            m_fenceValues[m_frameIndex]++;
+
+            // Create an event handle to use for frame synchronization.
+            m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+            if (m_fenceEvent == nullptr)
+            {
+                ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+            }
+
+            WaitForGpu();
+        }
     }
 }
 
@@ -500,7 +507,7 @@ void Game::PopulateCommandList()
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
-    m_commandList->DrawIndexedInstanced(6,1,0,0,0);
+    m_commandList->DrawIndexedInstanced(m_indexCounts[0], 1, 0, 0, 0);
    // m_commandList->DrawInstanced(3, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
