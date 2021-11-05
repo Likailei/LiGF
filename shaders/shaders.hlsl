@@ -10,8 +10,8 @@
 //*********************************************************
 struct PSInput
 {
-    float3 normal : NORMAL;
     float4 position : SV_POSITION;
+    float2 uv : TEXCOORD;
 };
 
 Texture2D g_texture : register(t0);
@@ -22,22 +22,19 @@ cbuffer constantObj : register(b0)
     float4x4 wvpMat;
 };
 
-PSInput VSMain(float3 normal : NORMAL, float3 position : POSITION)
+PSInput VSMain(float4 position : POSITION, float2 uv : TEXCOORD)
 {
     PSInput result;
 
     result.position = mul(position, wvpMat);
-    result.normal = float4(normal, 1.0f);
+    result.uv = uv;
 
     return result;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    
-    //float4 gray = g_texture.Sample(g_sampler, input.uv);
-    //float4 textColor = float4(0.4980f, 1.0000f, 0.6667f, 1.0f);
+    float3 color = g_texture.Sample(g_sampler, input.uv);
 
-    //return textColor * gray.x;
-    return float4(0.6f, 0.3f, 0.1f, 1.0f);
+    return float4(color.r, color.r, color.r, 1.0f);
 }

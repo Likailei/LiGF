@@ -93,9 +93,8 @@ void Camera::OnMouseMove(USHORT btnFlag, int x, int y)
 
 }
 
-void Camera::OnMouseWheelRotate(WPARAM btnState)
+void Camera::OnMouseWheelRotate(short delta)
 {
-	short delta = GET_WHEEL_DELTA_WPARAM(btnState);
 	float r = delta < 0 ? 0.7f : -0.7f;
 	mRadius += r;
 	mRadius = Clamp(mRadius, 1.0f, 50.0f);

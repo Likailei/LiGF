@@ -10,6 +10,7 @@
 #include "Input.h"
 #include "Camera.h"
 #include "Asset.h"
+#include "Map.h"
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -49,8 +50,8 @@ private:
     float m_aspectRatio;
     HWND m_hwnd;
 
-    static const UINT TextureWidth = 256;
-    static const UINT TextureHeight = 256;
+    static const UINT TextureWidth = 512;
+    static const UINT TextureHeight = 512;
     static const UINT8 TexturePixelSize{ 4 };
 
     struct Vertex

@@ -21,7 +21,7 @@ public:
 	void OnMouseDown(WPARAM btnState, int x, int y);
 	void OnMouseUp(WPARAM btnState, int x, int y);
 	void OnMouseMove(USHORT btnFlag, int x, int y);
-	void OnMouseWheelRotate(WPARAM btnState);
+	void OnMouseWheelRotate(short delta);
 
 	void SetCameraPositin(XMVECTOR camPos) { mEye = camPos; }
 	void SetObjectPosition(XMVECTOR objPos) { mObjPos = objPos; }

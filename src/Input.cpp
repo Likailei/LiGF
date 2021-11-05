@@ -46,14 +46,14 @@ void Input::DispatchInput(LPARAM lParam, Camera& camera)
     switch (raw->header.dwType)
     {
     case RIM_TYPEKEYBOARD:
-        sprintf_s(str, "Kbd: make=%04x Flags:%04x Reserved:%04x ExtraInformation:%08x, msg=%04x VK=%04x \n",
+        /*sprintf_s(str, "Kbd: make=%04x Flags:%04x Reserved:%04x ExtraInformation:%08x, msg=%04x VK=%04x \n",
             raw->data.keyboard.MakeCode,
             raw->data.keyboard.Flags,
             raw->data.keyboard.Reserved,
             raw->data.keyboard.ExtraInformation,
             raw->data.keyboard.Message,
             raw->data.keyboard.VKey);
-        OutputDebugStringA(str);
+        OutputDebugStringA(str);*/
         //if(raw->data.keyboard.Flags == RI_KEY_BREAK) 
         //OnKeyUp(raw->data.keyboard.VKey);
         break;
@@ -71,6 +71,10 @@ void Input::DispatchInput(LPARAM lParam, Camera& camera)
         OutputDebugStringA(str);
         if (raw->data.mouse.usButtonFlags == RI_MOUSE_LEFT_BUTTON_DOWN) m_mouseFlags.MOUSE_LBUTTON_DOWN = true;
         if (raw->data.mouse.usButtonFlags == RI_MOUSE_LEFT_BUTTON_UP) m_mouseFlags.MOUSE_LBUTTON_DOWN = false;
+        if (raw->data.mouse.usButtonFlags == RI_MOUSE_WHEEL) {
+            short delta = raw->data.mouse.usButtonData;
+            camera.OnMouseWheelRotate(delta);
+        }
         if(m_mouseFlags.MOUSE_LBUTTON_DOWN) camera.OnMouseMove(raw->data.mouse.usButtonFlags, (int)raw->data.mouse.lLastX, (int)raw->data.mouse.lLastY);
         break;
     }

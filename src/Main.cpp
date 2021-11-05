@@ -21,11 +21,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	Game* pGame = new Game(1280, 760, L"LiGF", m_hwnd);
 	pGame->OnInit();
 	
-	XMVECTOR a = XMVectorSet(1.0f, 1.0f, 0.0f, .0f);
-	XMVECTOR b = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-	auto c = XMVector2Dot(a, b);
 	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pGame));
-
 	ShowWindow(m_hwnd, nCmdShow);
 
 	MSG msg = {};
@@ -54,13 +50,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	case WM_INPUT:
 		pGame->OnInput(lParam);
 		return 0;
-	/*case WM_MOUSEMOVE:
-		pGame->OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-		return 0;*/
 
-	case WM_MOUSEWHEEL:
+	/*case WM_MOUSEWHEEL:
 		pGame->OnMWheelRotate(wParam);
-		return 0;
+		return 0;*/
 
 	case WM_PAINT:
 		pGame->OnUpdate();
