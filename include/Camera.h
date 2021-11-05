@@ -3,8 +3,6 @@
 
 #include "stdafx.h"
 
-using namespace DirectX;
-
 class Camera
 {
 public:
@@ -40,9 +38,9 @@ private:
 	XMFLOAT4X4 mWorldMat;
 	XMFLOAT4X4 mRotMat;
 
-	float mTheta = 1.5f * XM_PI;
-	float mPhi = XM_PIDIV4;
-	float mRadius = 2.0f;
+	/*float mTheta = 1.5f * XM_PI;
+	float mPhi = XM_PIDIV4;*/
+	//float mRadius = 2.0f;
 	XMFLOAT3 mRotXYZ;
 
 	POINT mMousePos;

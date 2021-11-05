@@ -282,7 +282,7 @@ void Game::LoadAssets()
     // Describe and create a Texture2D.
     D3D12_RESOURCE_DESC textureDesc = {};
     textureDesc.MipLevels = 1;
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.Format = DXGI_FORMAT_R8_UNORM;
     textureDesc.Width = TextureWidth;
     textureDesc.Height = TextureHeight;
     textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
@@ -451,15 +451,15 @@ void Game::OnMouseDown(WPARAM btnState, int x, int y)
     m_camera.OnMouseDown(btnState, x, y);
 }
 
-void Game::OnMWheelRotate(WPARAM btnState)
+void Game::OnMWheelRotate(short delta)
 {
-    short delta = GET_WHEEL_DELTA_WPARAM(btnState);
+    //short delta = GET_WHEEL_DELTA_WPARAM(btnState);
     m_camera.OnMouseWheelRotate(delta);
 }
 
 void Game::OnInput(LPARAM lParam)
 {
-    m_inputMgr->DispatchInput(lParam, m_camera);
+    m_inputMgr->DispatchInput(lParam);
 }
 
 void Game::PopulateCommandList()
@@ -498,7 +498,12 @@ void Game::PopulateCommandList()
     // Record commands.
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    if (Settings::WireFrameMode) {
+        m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
+    }
+    else {
+        m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    }
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     
     

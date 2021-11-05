@@ -20,9 +20,9 @@ Camera::~Camera()
 
 void Camera::GetViewMat()
 {
-	float x = mRadius * sinf(mPhi)*cosf(mTheta);
-	float z = mRadius * sinf(mPhi)*sinf(mTheta);
-	float y = mRadius * cosf(mPhi);
+	float x = Settings::CameraRadius * sinf(Settings::CameraPhi)*cosf(Settings::CameraTheta);
+	float z = Settings::CameraRadius * sinf(Settings::CameraPhi)*sinf(Settings::CameraTheta);
+	float y = Settings::CameraRadius * cosf(Settings::CameraPhi);
 
 	mEye = XMVectorSet(x, y, z, 1.0f);
 	mAt = XMVectorZero();
@@ -75,19 +75,6 @@ void Camera::OnMouseUp(WPARAM btnState, int x, int y)
 
 void Camera::OnMouseMove(USHORT btnFlag, int x, int y)
 {
-	/*float detaX = mMousePos.x - x;
-	float detaY = mMousePos.y - y;*/
-	// Make each pixel correspond to a quarter of a degree.
-	float dx = XMConvertToRadians(0.025f * static_cast<float>(-x));
-	float dy = XMConvertToRadians(0.025f * static_cast<float>(-y));
-
-	// Update angles based on input to orbit camera around box.
-	mTheta += dx;
-	mPhi += dy;
-
-	// Restrict the angle mPhi.
-	mPhi = Clamp(mPhi, 0.1f, XM_PI - 0.1f);
-
 	mMousePos.x = x;
 	mMousePos.y = y;
 
@@ -96,6 +83,6 @@ void Camera::OnMouseMove(USHORT btnFlag, int x, int y)
 void Camera::OnMouseWheelRotate(short delta)
 {
 	float r = delta < 0 ? 0.7f : -0.7f;
-	mRadius += r;
-	mRadius = Clamp(mRadius, 1.0f, 50.0f);
+	Settings::CameraRadius += r;
+	Settings::CameraRadius = Clamp(Settings::CameraRadius, 1.0f, 50.0f);
 }

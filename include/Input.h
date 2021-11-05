@@ -3,7 +3,7 @@
 #define _INPUT_H_
 
 #include "stdafx.h"
-#include "Camera.h"
+#include "Settings.h"
 
 class Input
 {
@@ -19,7 +19,7 @@ public:
 	MouseFlags m_mouseFlags;
 
 	RAWINPUT* const GetRawInput();
-	void DispatchInput(LPARAM lParam, Camera& camera);
+	void DispatchInput(LPARAM lParam);
 private:
 	RAWINPUTDEVICE m_rawInputDevices[2];
 	LPBYTE m_rawInput;

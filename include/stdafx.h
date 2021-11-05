@@ -23,8 +23,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
-
 #include <wrl.h>
+#include "Settings.h"
 
 using namespace DirectX;
 

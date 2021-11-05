@@ -126,6 +126,7 @@
     <ClInclude Include="include\Image.h" />
     <ClInclude Include="include\Interface.h" />
     <ClInclude Include="include\json.hpp" />
+    <ClInclude Include="include\Settings.h" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="include\Timer.h" />
     <ClInclude Include="include\Input.h" />
@@ -141,6 +142,7 @@
     <ClCompile Include="src\Image.cpp" />
     <ClCompile Include="src\Interface.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Settings.cpp" />
     <ClCompile Include="src\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>

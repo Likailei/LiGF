@@ -51,10 +51,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		pGame->OnInput(lParam);
 		return 0;
 
-	/*case WM_MOUSEWHEEL:
-		pGame->OnMWheelRotate(wParam);
-		return 0;*/
-
 	case WM_PAINT:
 		pGame->OnUpdate();
 		pGame->OnRender();

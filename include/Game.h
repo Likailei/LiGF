@@ -25,12 +25,11 @@ public:
 	virtual void OnRender();
 	virtual void OnDestroy();
     
-	//virtual void OnKeyDown(UINT8 key);
 	void OnKeyUp(UINT8 key);
     void OnMouseMove(WPARAM btnState, int x, int y);
     void OnMouseUp(WPARAM btnState, int x, int y);
     void OnMouseDown(WPARAM btnState, int x, int y);
-    void OnMWheelRotate(WPARAM btnState);
+    void OnMWheelRotate(short delta);
     void OnInput(LPARAM lParam);
 
 	Image* m_imageMgr;
@@ -52,7 +51,7 @@ private:
 
     static const UINT TextureWidth = 512;
     static const UINT TextureHeight = 512;
-    static const UINT8 TexturePixelSize{ 4 };
+    static const UINT8 TexturePixelSize{ 1 };
 
     struct Vertex
     {

@@ -23,11 +23,8 @@ void Map::GeneratePerlinNoiseHMap(UINT8* data, UINT width, UINT height, double o
 			sum = (sum + 1.0f) * 255.f / 2.f;
 			UINT8 c = (UINT8)floor(sum);
 
-			data[index + 0] = c;
-			data[index + 1] = c;
-			data[index + 2] = c;
-			data[index + 3] = 255;
-			index += 4;
+			data[index] = c;
+			index++;
 		}
 	}
 }
