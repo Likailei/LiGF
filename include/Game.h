@@ -38,6 +38,8 @@ public:
     Asset* m_assetMgr;
 
     std::vector<UINT32> m_indexCounts;
+    std::vector<D3D12_VERTEX_BUFFER_VIEW> m_vBufferViews;
+    std::vector<D3D12_INDEX_BUFFER_VIEW> m_iBufferViews;
 
 private:
     static const UINT FrameCount = 3;

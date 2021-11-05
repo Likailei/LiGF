@@ -167,16 +167,14 @@ void Game::LoadAssets()
     ThrowIfFailed(D3DCompileFromFile(L"./shaders/shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
     ThrowIfFailed(D3DCompileFromFile(L"./shaders/shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
-    // Define the vertex input layout.
-    D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
-    {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-    };
+
+    std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
+    m_assetMgr->LoadGLTF("./assets/RiggedFigure.gltf");
+    m_assetMgr->DumpInputElementDesc(inputElementDescs);
 
     // Describe and create the graphics pipeline state object (PSO).
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-    psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+    psoDesc.InputLayout = { inputElementDescs.data(), (UINT)inputElementDescs.size()};
     psoDesc.pRootSignature = m_rootSignature.Get();
     psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
     psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
@@ -196,215 +194,72 @@ void Game::LoadAssets()
 
     ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
 
-    /*
-    m_fontMgr->LoadFontFile("assets/STFANGSO.TTF");
-    m_fontMgr->SetPixelSize(256, 256);
-    StringBufferInfo sbi{};
-    m_fontMgr->GetHoriString(L"醉后不知天在水，满船清梦压星河", sbi);
 
-    m_aspectRatio = (float)sbi.width / (float)sbi.rows;
-    // Define the geometry for a triangle.
-    float scaleX = 0.8f / 1.0f;
-    float h = 0.06f;
-    Vertex triangleVertices[] =
-    {
-        { { -h*m_aspectRatio,  h, 1.0f }, {0.0f, 0.0f} },
-        { {h * m_aspectRatio, -h, 1.0f }, { 1.0f, 1.0f }},
-        { {-h * m_aspectRatio, -h, 1.0f }, { 0.0f, 1.0f }},
-        { {h * m_aspectRatio,  h, 1.0f }, { 1.0f, 0.0f }}
-    };
-    const UINT vertexBufferSize = sizeof(triangleVertices);
-
-    UINT iList[] = {
-        0, 1, 2, // first triangle
-        0, 3, 1 // second triangle
-    };
-    int iBufferSize = sizeof(iList);
-
-    // Note: using upload heaps to transfer static data like vert buffers is not
-    // recommended. Every time the GPU needs it, the upload heap will be marshalled
-    // over. Please read up on Default Heap usage. An upload heap is used here for
-    // code simplicity and because there are very few verts to actually transfer.
-    ThrowIfFailed(m_device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-        D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&m_vertexBuffer)));
-
-    // Copy the triangle data to the vertex buffer.
-    UINT8* pVertexDataBegin;
-    CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-    ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-    memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
-    m_vertexBuffer->Unmap(0, nullptr);
-
-    // Initialize the vertex buffer view.
-    m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
-    m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-    m_vertexBufferView.SizeInBytes = vertexBufferSize;
-
-    ComPtr<ID3D12Resource> indexBufferUploadHeap;
-
-    // Create the index buffer.
-    {
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(iBufferSize),
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            nullptr,
-            IID_PPV_ARGS(&m_indexBuffer)));
-
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(iBufferSize),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&indexBufferUploadHeap)));
-
-
-        // Copy data to the intermediate upload heap and then schedule a copy
-        // from the upload heap to the index buffer.
-        D3D12_SUBRESOURCE_DATA indexData = {};
-        indexData.pData = reinterpret_cast<UINT*>(iList);
-        indexData.RowPitch = iBufferSize;
-        indexData.SlicePitch = iBufferSize;
-
-        UpdateSubresources<1>(m_commandList.Get(), m_indexBuffer.Get(), indexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
-
-        // Describe the index buffer view.
-        m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
-        m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-        m_indexBufferView.SizeInBytes =iBufferSize;
-
-        m_numIndices = iBufferSize / 4;    // R32_UINT (SampleAssets::StandardIndexFormat) = 4 bytes each.
-    }*/
-
-    m_assetMgr->LoadGLTF("./assets/millstone.gltf");
-    UINT32 indexCount = m_assetMgr->InitSingleMesh(m_device.Get(), m_commandList.Get(), &m_vertexBufferView, &m_indexBufferView, 3);
-    m_indexCounts.push_back(indexCount);
-
-    // Create the texture.
-    {
-        //std::vector<UINT8> img = LoadTextureFromImg(L"./assets/img1.jpg");
-
-        //CharBufferInfo cbi = GetCharTexture(L'T', 256);
-
-
-
-        /*
-        D3D12_SUBRESOURCE_DATA textureData = {};
-        textureData.pData = sbi.buffer;
-        textureData.RowPitch = sbi.pitch;
-        textureData.SlicePitch = textureData.RowPitch * sbi.rows;
-
-        // Describe and create a Texture2D.
-        D3D12_RESOURCE_DESC textureDesc = {};
-        textureDesc.MipLevels = 1;
-        textureDesc.Format = DXGI_FORMAT_R8_UNORM;
-        textureDesc.Width = sbi.width;
-        textureDesc.Height = sbi.rows;
-        textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-        textureDesc.DepthOrArraySize = 1;
-        textureDesc.SampleDesc.Count = 1;
-        textureDesc.SampleDesc.Quality = 0;
-        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &textureDesc,
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            nullptr,
-            IID_PPV_ARGS(&m_texture)));
-
-        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_texture.Get(), 0, 1);
-
-        // Create the GPU upload buffer.
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&textureUploadHeap)));
-
-        UpdateSubresources(m_commandList.Get(), m_texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-
-        // Describe and create a SRV for the texture.
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = textureDesc.Format;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = 1;
-        m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
-    }*/
+    m_assetMgr->UploadOnce(m_device.Get(), m_commandList.Get(), m_vBufferViews, m_iBufferViews);
 
     // Create constant buffer view
-        for (UINT8 n = 0; n < FrameCount; ++n) {
-            ThrowIfFailed(m_device->CreateCommittedResource(
-                &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-                D3D12_HEAP_FLAG_NONE,
-                &CD3DX12_RESOURCE_DESC::Buffer(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT),
-                D3D12_RESOURCE_STATE_GENERIC_READ,
-                nullptr,
-                IID_PPV_ARGS(&m_constBufferUploadHeaps[n])));
+    for (UINT8 n = 0; n < FrameCount; ++n) {
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_constBufferUploadHeaps[n])));
 
-            CD3DX12_RANGE range(0, 0);
-            ThrowIfFailed(m_constBufferUploadHeaps[n]->Map(0, &range, reinterpret_cast<void**>(&m_constBufferGPUAddress[n])));
+        CD3DX12_RANGE range(0, 0);
+        ThrowIfFailed(m_constBufferUploadHeaps[n]->Map(0, &range, reinterpret_cast<void**>(&m_constBufferGPUAddress[n])));
 
-            memset(&m_constBuffer, 0, sizeof(ConstBufferObject));
-            memcpy(m_constBufferGPUAddress[n], &m_constBuffer, sizeof(ConstBufferObject));
-        }
+        memset(&m_constBuffer, 0, sizeof(ConstBufferObject));
+        /*XMMATRIX scale = XMMatrixScaling(1.0f, 3.413419723510742, 1.0f);
+        XMMATRIX trans = XMMatrixTranslation(1.0f, 1.0f, 1.0f);
+        auto m = scale * trans;
+        XMStoreFloat4x4(&m_constBuffer.mvpMat, m);*/
+        memcpy(m_constBufferGPUAddress[n], &m_constBuffer, sizeof(ConstBufferObject));
+    }
 
-        // Create depth stencil view
+    // Create depth stencil view
+    {
+        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+        D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+        depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+        depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            &depthOptimizedClearValue,
+            IID_PPV_ARGS(&m_depthStencil)
+        ));
+
+        m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    }
+
+    // Execute the command list.
+    ThrowIfFailed(m_commandList->Close());
+    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+    // Create synchronization objects and wait until assets have been uploaded to the GPU.
+    {
+        ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+        m_fenceValues[m_frameIndex]++;
+
+        // Create an event handle to use for frame synchronization.
+        m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        if (m_fenceEvent == nullptr)
         {
-            D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-            depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-            depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-            depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-            D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-            depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-            depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-            depthOptimizedClearValue.DepthStencil.Stencil = 0;
-
-            ThrowIfFailed(m_device->CreateCommittedResource(
-                &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-                D3D12_HEAP_FLAG_NONE,
-                &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
-                D3D12_RESOURCE_STATE_DEPTH_WRITE,
-                &depthOptimizedClearValue,
-                IID_PPV_ARGS(&m_depthStencil)
-            ));
-
-            m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+            ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
         }
 
-        // Execute the command list.
-        ThrowIfFailed(m_commandList->Close());
-        ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
-        m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-        // Create synchronization objects and wait until assets have been uploaded to the GPU.
-        {
-            ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-            m_fenceValues[m_frameIndex]++;
-
-            // Create an event handle to use for frame synchronization.
-            m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-            if (m_fenceEvent == nullptr)
-            {
-                ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
-            }
-
-            WaitForGpu();
-        }
+        WaitForGpu();
     }
 }
 
@@ -412,6 +267,12 @@ void Game::OnUpdate()
 {
     /*XMFLOAT3 rot = XMFLOAT3(0.0f, 0.01f, 0.0f);
     m_camera.GetRotMat(rot);*/
+
+    /*XMMATRIX scale = XMMatrixScaling(1.2000000476837158f, 1.0f, 1.2000000476837158f);
+    XMMATRIX trans = XMMatrixTranslation(0.0f, 1.8118466138839722f, 0.0f);
+    auto m = trans * scale;*/
+    //XMStoreFloat4x4(&m_constBuffer.mvpMat, XMLoadFloat4x4(&m_camera.mWVPMat) * m);
+   
     m_camera.GetTransWVPMat();
     m_constBuffer.mvpMat = m_camera.mWVPMat;
     memcpy(m_constBufferGPUAddress[m_frameIndex], &m_constBuffer, sizeof(ConstBufferObject));
@@ -505,9 +366,11 @@ void Game::PopulateCommandList()
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    m_commandList->IASetIndexBuffer(&m_indexBufferView);
-    m_commandList->DrawIndexedInstanced(m_indexCounts[0], 1, 0, 0, 0);
+    m_commandList->IASetVertexBuffers(0, 1, &m_vBufferViews[0]);
+    
+    
+    m_commandList->IASetIndexBuffer(&m_iBufferViews[0]);
+    m_commandList->DrawIndexedInstanced(768, 1, 0, 0, 0);
    // m_commandList->DrawInstanced(3, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.

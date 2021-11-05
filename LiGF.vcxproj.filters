@@ -345,6 +345,9 @@
     <ClInclude Include="include\Asset.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Font.cpp">
@@ -372,6 +375,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Asset.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Map.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

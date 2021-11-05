@@ -88,6 +88,94 @@ Asset::BufferInfo Asset::GetData(fx::gltf::Document const& doc, fx::gltf::Access
     return Asset::BufferInfo{ &accessor, &buffer.data[static_cast<uint64_t>(bufferView.byteOffset) + accessor.byteOffset], dataTypeSize, accessor.count * dataTypeSize };
 }
 
+void Asset::GetVertexBufferLayout()
+{
+    const auto& meshs = m_gltfScene.meshes;
+    for (const auto& m : meshs) {
+        for (const auto& p : m.primitives) {
+            for (const auto& attrib : p.attributes) {
+                const auto& acc = m_gltfScene.accessors[attrib.second];
+                const auto& bv = m_gltfScene.bufferViews[acc.bufferView];
+                auto offset = bv.byteOffset + acc.byteOffset; // from buffer0.start BUFFER1 2...
+                auto size = bv.byteLength;
+                auto stride = bv.byteStride;
+
+                if (attrib.first == "POSITION") m_vertexLayout.push_back(VertexPartInfo{ "POSITION", stride, size, offset });
+                else if (attrib.first == "NORMAL") m_vertexLayout.push_back(VertexPartInfo{ "NORMAL", stride, size, offset });
+                //else if (attrib.first == "TANGENT") m_vertexLayout.push_back(VertexPartInfo{ "TANGENT", stride, size, offset });
+                //else if (attrib.first == "TEXCOORD_0") m_vertexLayout.push_back(VertexPartInfo{ "TEXCOORD_0", stride, size, offset });
+                //else if (attrib.first == "COLOR_0") m_vertexLayout.push_back(VertexPartInfo{ "COLOR_0", stride, size, offset });
+            }
+            std::sort(m_vertexLayout.begin(), m_vertexLayout.end(), [](const VertexPartInfo& a, const VertexPartInfo& b){return a.offset<b.offset;});
+            
+            const auto& acc = m_gltfScene.accessors[p.indices];
+            const auto& bv = m_gltfScene.bufferViews[acc.bufferView];
+            IndexPartInfo ipi{};
+            ipi.offset = acc.byteOffset + bv.byteOffset;
+            ipi.size = bv.byteLength;
+            ipi.format = DXGI_FORMAT_R16_UINT;
+            m_indexLayout.push_back(ipi);
+        }
+    }
+}
+
+void Asset::DumpInputElementDesc(std::vector<D3D12_INPUT_ELEMENT_DESC>& inputDesc)
+{
+    GetVertexBufferLayout();
+    for (const auto& v : m_vertexLayout) {
+        D3D12_INPUT_ELEMENT_DESC ied{};
+        ied.SemanticName = v.name.c_str();
+        ied.SemanticIndex = 0;
+        ied.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+        ied.InputSlot = 0;
+        ied.AlignedByteOffset = v.offset;
+        ied.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+        ied.InstanceDataStepRate = 0;
+        inputDesc.push_back(ied);
+    }
+}
+
+void Asset::UploadOnce(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, std::vector<D3D12_VERTEX_BUFFER_VIEW>& vBufferViews, std::vector<D3D12_INDEX_BUFFER_VIEW>& iBufferViews)
+{
+    UINT32 bufferSize = m_gltfScene.buffers[0].byteLength;
+    ThrowIfFailed(device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(m_defaultResource.ReleaseAndGetAddressOf())));
+
+    ThrowIfFailed(device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(m_uploadResource.ReleaseAndGetAddressOf())));
+
+    UINT8* bufferStart{};
+    const CD3DX12_RANGE range(0, 0);
+    ThrowIfFailed(m_uploadResource->Map(0, &range, reinterpret_cast<void**>(&bufferStart)));
+    commandList->CopyBufferRegion(m_defaultResource.Get(), 0, m_uploadResource.Get(), 0, bufferSize);
+    const CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_defaultResource.Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER | D3D12_RESOURCE_STATE_INDEX_BUFFER);
+    commandList->ResourceBarrier(1, &barrier);
+
+    D3D12_VERTEX_BUFFER_VIEW vbv{};
+    vbv.BufferLocation = m_defaultResource->GetGPUVirtualAddress() + m_vertexLayout[0].offset;
+    const auto& last = m_vertexLayout.back();
+    vbv.SizeInBytes =last.offset + last.size;
+    vbv.StrideInBytes = last.offset + last.stride;
+    vBufferViews.push_back(vbv);
+
+    D3D12_INDEX_BUFFER_VIEW ibv{};
+    ibv.BufferLocation = m_defaultResource->GetGPUVirtualAddress() + m_indexLayout.begin()->offset;
+    ibv.Format = m_indexLayout.begin()->format;
+    ibv.SizeInBytes = m_indexLayout.begin()->size;
+    iBufferViews.push_back(ibv);
+}
+
 std::string Asset::GetFileExtension(const std::string fileName)
 {
     if (fileName.find_last_of(".") != std::string::npos)
