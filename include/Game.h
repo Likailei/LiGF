@@ -10,6 +10,7 @@
 #include "Input.h"
 #include "Camera.h"
 #include "Asset.h"
+#include "Noise.h"
 #include "Map.h"
 
 using namespace DirectX;

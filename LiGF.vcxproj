@@ -126,14 +126,19 @@
     <ClInclude Include="include\Image.h" />
     <ClInclude Include="include\Interface.h" />
     <ClInclude Include="include\json.hpp" />
+    <ClInclude Include="include\mycraft\Chunk.h" />
+    <ClInclude Include="include\mycraft\CraftHead.h" />
+    <ClInclude Include="include\mycraft\Region.h" />
     <ClInclude Include="include\Settings.h" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="include\Timer.h" />
     <ClInclude Include="include\Input.h" />
+    <ClInclude Include="include\Noise.h" />
     <ClInclude Include="include\Map.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Map.cpp" />
+    <ClCompile Include="src\Noise.cpp" />
     <ClCompile Include="src\Asset.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Input.cpp" />
