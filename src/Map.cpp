@@ -79,45 +79,72 @@ void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
 					blockCoord.y = p.y + y;
 					blockCoord.z = p.z - z;
 
-					//if (chunk.GetBlockType(IntPos(x, y, z - 1)) != MyCraft::BlockType::AIR){
-						//front face
+					//front face
+					if (z==15 || (z<15 && chunk.GetBlockType(IntPos(x, y, z + 1)) == MyCraft::BlockType::AIR)) {
 						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.0f });
 						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 1.0f,  0.5f });
 						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
 						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 1.0f,  0.0f });
-					//}
-					
-					//right side face
-					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 1.0f,  0.0f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 1.0f,  0.5f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.0f });
-					//left side face
-					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 1.0f,  0.5f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  0.5f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 1.0f,  0.0f });
-					//back face
-					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 1.0f,  0.5f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  0.5f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 1.0f,  0.0f });
-					//top face
-					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.0f,  0.5f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.0f,  0.0f });
-					//bottom face
-					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  1.0f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.0f,  0.5f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
-					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.0f,  1.0f });
-
-					for (UINT v : iList) {
-						v += index * 24;
-						chunkMesh.indices.push_back(v);
+						auto cnt = chunkMesh.vertices.size();
+						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
+						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
 					}
-					index++;
+
+					//right side face
+					if (x==15 || (x<15 && chunk.GetBlockType(IntPos(x + 1, y, z)) == MyCraft::BlockType::AIR)) {
+						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 1.0f,  0.0f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 1.0f,  0.5f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.0f });
+						auto cnt = chunkMesh.vertices.size();
+						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
+						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
+					}
+
+					//left side face
+					if (x == 0 || ( x>0 && chunk.GetBlockType(IntPos(x - 1, y, z)) == MyCraft::BlockType::AIR)) {
+						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 1.0f,  0.5f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  0.5f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 1.0f,  0.0f });
+						auto cnt = chunkMesh.vertices.size();
+						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
+						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
+					}
+
+
+					//back face
+					if (z == 0 || (z > 0 && chunk.GetBlockType(IntPos(x, y, z - 1)) == MyCraft::BlockType::AIR)) {
+						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 1.0f,  0.5f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  0.5f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 1.0f,  0.0f });
+						auto cnt = chunkMesh.vertices.size();
+						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
+						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
+					}
+
+					//top face
+					if (chunk.GetBlockType(IntPos(x, y + 1, z)) == MyCraft::BlockType::AIR) {
+						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.0f,  0.5f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.0f,  0.0f });
+						auto cnt = chunkMesh.vertices.size();
+						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
+						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
+					}
+
+					//bottom face
+					if (y == 0 || (y>0 && chunk.GetBlockType(IntPos(x, y - 1, z)) == MyCraft::BlockType::AIR)) {
+							chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  1.0f });
+							chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.0f,  0.5f });
+							chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
+							chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.0f,  1.0f });
+							auto cnt = chunkMesh.vertices.size();
+							chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
+							chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
+					}
 				}
 			}
 		}
