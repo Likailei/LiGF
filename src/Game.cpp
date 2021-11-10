@@ -13,7 +13,7 @@ Game::Game(UINT width, UINT height, std::wstring name, HWND hwnd) :
 	m_rtvDescriptorSize(0),
 	m_camera(m_hwnd, m_aspectRatio, XMVectorSet(0.0f, 0.0f, -5.0f, 0.0f))
 {
-	//m_imageMgr = new Image();
+	m_imageMgr = new Image();
 	//m_fontMgr = new Font();
 	m_inputMgr = new Input();
 }
@@ -198,9 +198,8 @@ void Game::LoadAssets()
 	ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
 
 	
-	MyCraft::Map* map = new MyCraft::Map(IntPos{ 0, 0, 0 });
 
-	
+	MyCraft::Map* map = new MyCraft::Map(IntPos{ 0, 0, 0 });	
 	map->CreateChunkMesh(IntPos(0, 0, 0), ChunkMesh);
 
 	const UINT vBufferSize = ChunkMesh.vertices.size() * sizeof(Vertex);
@@ -268,13 +267,16 @@ void Game::LoadAssets()
 	m_indexBufferView.SizeInBytes = iBufferSize;
 	m_numIndices = iBufferSize / 4;
 
-	/*
+	std::vector<UINT8> imgBuffer;
+	UINT tw, th;
+	m_imageMgr->GetPngBuffer(imgBuffer, L"assets/craft/grass.png", &tw, &th);
+
 	// Describe and create a Texture2D.
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.MipLevels = 1;
-	textureDesc.Format = DXGI_FORMAT_R8_UNORM;
-	textureDesc.Width = TextureWidth;
-	textureDesc.Height = TextureHeight;
+	textureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	textureDesc.Width = tw;
+	textureDesc.Height = th;
 	textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 	textureDesc.DepthOrArraySize = 1;
 	textureDesc.SampleDesc.Count = 1;
@@ -302,9 +304,9 @@ void Game::LoadAssets()
 
 
 	D3D12_SUBRESOURCE_DATA textureData = {};
-	textureData.pData = &pHmapData[0];
-	textureData.RowPitch = TextureWidth * TexturePixelSize;
-	textureData.SlicePitch = textureData.RowPitch * TextureHeight;
+	textureData.pData = imgBuffer.data();
+	textureData.RowPitch = tw * 4;
+	textureData.SlicePitch = textureData.RowPitch * th;
 
 	UpdateSubresources(m_commandList.Get(), m_texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
 	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
@@ -317,7 +319,7 @@ void Game::LoadAssets()
 	srvDesc.Texture2D.MipLevels = 1;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_cbvSrvDescriptorSize);
 	m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, srvHandle);
-	*/
+	
 
 	// Create constant buffer view
 	for (UINT8 n = 0; n < FrameCount; ++n) {

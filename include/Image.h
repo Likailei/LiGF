@@ -15,6 +15,7 @@ public:
 	void InitDecoderFromFile(const wchar_t* fileName);
 	UINT GetFrames();
 	void SaveBufferAsPng(CharBufferInfo fbb, const wchar_t* fileName);
+	void GetPngBuffer(std::vector<UINT8>& buffer, const wchar_t* fileName, UINT* w, UINT* h);
 
 	std::vector<IWICBitmapFrameDecode*> m_pFrames;
 

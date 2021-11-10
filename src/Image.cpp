@@ -79,3 +79,12 @@ void Image::SaveBufferAsPng(CharBufferInfo fbb, const wchar_t* fileName)
 	m_pImageFrame->Commit();
 	m_pImageEncoder->Commit();
 }
+
+void Image::GetPngBuffer(std::vector<UINT8>& buffer, const wchar_t* fileName, UINT* w, UINT* h)
+{
+	InitDecoderFromFile(fileName);
+	GetFrames();
+	m_pFrames[0]->GetSize(w, h);
+	buffer.resize(*w * *h * 4);
+	m_pFrames[0]->CopyPixels(nullptr, *w * 4, *w * *h * 4, buffer.data());
+}

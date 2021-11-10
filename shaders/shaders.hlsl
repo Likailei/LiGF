@@ -36,5 +36,5 @@ float4 PSMain(PSInput input) : SV_TARGET
 {
     float3 color = g_texture.Sample(g_sampler, input.uv);
 
-    return float4(color.r, color.r, color.r, 1.0f);
+    return float4(color, 1.0f);
 }
