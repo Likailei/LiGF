@@ -8,8 +8,20 @@ namespace MyCraft
 {
 class Chunk {
 private:
-	IntPos Position;
+	IntPos NWCoordinate;
 	std::vector<BlockType> Blocks;
+
+	IntPos WorldToLocal(const IntPos& worldPos){
+		IntPos local{};
+
+		local.x = worldPos.x<0 ? ChunkWidthByBlock + worldPos.x % ChunkWidthByBlock
+							   : worldPos.x % ChunkWidthByBlock;
+		local.z = worldPos.z>0 ? ChunkWidthByBlock - worldPos.z % ChunkWidthByBlock
+							   : abs(worldPos.z) % ChunkWidthByBlock;
+		local.y = worldPos.y;
+		return local;
+
+	}
 
 public:
 	static const UINT ChunkWidthByBlock = 16;
@@ -20,19 +32,30 @@ public:
 		Blocks.resize(ChunkBlockAmount, BlockType::AIR);
 	};
 
-	Chunk(IntPos p) : Position(p) {
+	Chunk(IntPos p) : NWCoordinate(p) {
 		Blocks.resize(ChunkBlockAmount, BlockType::AIR);
 	}
+	IntPos GetPosition() const { return NWCoordinate; }
+	void SetPosition(IntPos p) { NWCoordinate = p; }
 
-	void SetPosition(IntPos p) { Position = p; }
-
-	BlockType* GetPtrFromRelativePosition(int x, int y) {
-		return Blocks.data() + y * ChunkWidthByBlock * ChunkHeightByBlock + x * ChunkHeightByBlock;
+	void SetBlockTypeByLocalPos(const IntPos& localPos, MyCraft::BlockType type){
+		Blocks[localPos.z * ChunkWidthByBlock * ChunkHeightByBlock + localPos.x * ChunkHeightByBlock + localPos.y] = type;
 	}
 
-	BlockType GetBlockType(IntPos p) {
-		return Blocks[p.y * ChunkWidthByBlock * ChunkHeightByBlock + p.x * ChunkHeightByBlock + p.z];
+	void SetBlockTypeByWorldPos(const IntPos& worldPos, MyCraft::BlockType type){
+		auto local = WorldToLocal(worldPos);
+		SetBlockTypeByLocalPos(local, type);
 	}
+
+	BlockType* GetColumnStartPtrByLocal(int x, int z) {
+		return Blocks.data() + z * ChunkWidthByBlock * ChunkHeightByBlock + x * ChunkHeightByBlock;
+	}
+
+	BlockType GetBlockType(IntPos local) {
+		//auto local = WorldToLocal(worldPos);
+		return Blocks[local.z * ChunkWidthByBlock * ChunkHeightByBlock + local.x * ChunkHeightByBlock + local.y];
+	}
+
 };
 }
 

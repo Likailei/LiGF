@@ -13,8 +13,8 @@ Game::Game(UINT width, UINT height, std::wstring name, HWND hwnd) :
 	m_rtvDescriptorSize(0),
 	m_camera(m_hwnd, m_aspectRatio, XMVectorSet(0.0f, 0.0f, -5.0f, 0.0f))
 {
-	m_imageMgr = new Image();
-	m_fontMgr = new Font();
+	//m_imageMgr = new Image();
+	//m_fontMgr = new Font();
 	m_inputMgr = new Input();
 }
 
@@ -197,28 +197,22 @@ void Game::LoadAssets()
 
 	ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
 
+	
+	MyCraft::Map* map = new MyCraft::Map(IntPos{ 0, 0, 0 });
 
-	Vertex triangleVertices[] =
-	{
-		{ { -.5f,  .5f, 1.0f }, { 0.0f, 0.0f} },
-		{ {  .5f, -.5f, 1.0f }, { 1.0f, 1.0f }},
-		{ { -.5f, -.5f, 1.0f }, { 0.0f, 1.0f }},
-		{ {  .5f,  .5f, 1.0f }, { 1.0f, 0.0f }}
-	};
-	const UINT vertexBufferSize = sizeof(triangleVertices);
+	
+	map->CreateChunkMesh(IntPos(0, 0, 0), ChunkMesh);
 
-	UINT iList[] = {
-	   0, 1, 2, // first triangle
-	   0, 3, 1 // second triangle
-	};
-	int iBufferSize = sizeof(iList);
+	const UINT vBufferSize = ChunkMesh.vertices.size() * sizeof(Vertex);
+	const UINT iBufferSize = ChunkMesh.indices.size() * sizeof(UINT);
 
+	
 	ComPtr<ID3D12Resource> vertexBufferUploadHeap;
 	// Vertex index buffer
 	ThrowIfFailed(m_device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
+		&CD3DX12_RESOURCE_DESC::Buffer(vBufferSize),
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
 		IID_PPV_ARGS(&m_vertexBuffer)));
@@ -226,23 +220,22 @@ void Game::LoadAssets()
 	ThrowIfFailed(m_device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
+		&CD3DX12_RESOURCE_DESC::Buffer(vBufferSize),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&vertexBufferUploadHeap)));
 
 	D3D12_SUBRESOURCE_DATA vertexData = {};
-	vertexData.pData = reinterpret_cast<Vertex*>(triangleVertices);
-	vertexData.RowPitch = vertexBufferSize;
-	vertexData.SlicePitch = vertexBufferSize;
+	vertexData.pData = reinterpret_cast<Vertex*>(ChunkMesh.vertices.data());
+	vertexData.RowPitch = vBufferSize;
+	vertexData.SlicePitch = vBufferSize;
 	UpdateSubresources<1>(m_commandList.Get(), m_vertexBuffer.Get(), vertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
 	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-
 
 	// Initialize the vertex buffer view.
 	m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
 	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-	m_vertexBufferView.SizeInBytes = vertexBufferSize;
+	m_vertexBufferView.SizeInBytes = vBufferSize;
 
 	ComPtr<ID3D12Resource> indexBufferUploadHeap;
 	// Create the index buffer.
@@ -264,7 +257,7 @@ void Game::LoadAssets()
 	// Copy data to the intermediate upload heap and then schedule a copy
 	// from the upload heap to the index buffer.
 	D3D12_SUBRESOURCE_DATA indexData = {};
-	indexData.pData = reinterpret_cast<UINT*>(iList);
+	indexData.pData = reinterpret_cast<UINT*>(ChunkMesh.indices.data());
 	indexData.RowPitch = iBufferSize;
 	indexData.SlicePitch = iBufferSize;
 	UpdateSubresources<1>(m_commandList.Get(), m_indexBuffer.Get(), indexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
@@ -275,15 +268,7 @@ void Game::LoadAssets()
 	m_indexBufferView.SizeInBytes = iBufferSize;
 	m_numIndices = iBufferSize / 4;
 
-	// Texture
-	UINT8* pHmapData = new UINT8[TextureWidth * TextureHeight * TexturePixelSize];
-	//Noise::GeneratePerlinNoiseHMap(pHmapData, TextureWidth, TextureHeight, 0.2f);
-	//Noise::GenerateHMapFromPos(pHmapData, 512, -2.3f, 4.6f);
-
-	MyCraft::Map* map = new MyCraft::Map(IntPos{ 2, 4, 0 });
-
-	auto r = map->SpawnRegion;
-
+	/*
 	// Describe and create a Texture2D.
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.MipLevels = 1;
@@ -332,6 +317,7 @@ void Game::LoadAssets()
 	srvDesc.Texture2D.MipLevels = 1;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_cbvSrvDescriptorSize);
 	m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, srvHandle);
+	*/
 
 	// Create constant buffer view
 	for (UINT8 n = 0; n < FrameCount; ++n) {
@@ -513,7 +499,7 @@ void Game::PopulateCommandList()
 
 
 	m_commandList->IASetIndexBuffer(&m_indexBufferView);
-	m_commandList->DrawIndexedInstanced(m_numIndices, 1, 0, 0, 0);
+	m_commandList->DrawIndexedInstanced(ChunkMesh.indices.size(), 1, 0, 0, 0);
 	// m_commandList->DrawInstanced(3, 1, 0, 0);
 
 	 // Indicate that the back buffer will now be used to present.

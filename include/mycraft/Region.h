@@ -6,44 +6,48 @@
 
 namespace MyCraft
 {
-class Region {
-public:
-	static const INT RegionWidthByChunk = 32;
-	static const INT RegionWidthByBlock = Chunk::ChunkWidthByBlock * RegionWidthByChunk;
+	class Region {
+	public:
+		static const INT RegionWidthByChunk = 32;
+		static const INT RegionWidthByBlock = Chunk::ChunkWidthByBlock * RegionWidthByChunk;
 
-	Region(IntPos worldPos) {
-		NWCoordinate = CalcNorthWestCoord(worldPos);
-		Chunks.resize(RegionWidthByChunk * RegionWidthByChunk);
-	}
+		Region(IntPos regionPos) : NWCoordinate(regionPos) {
+			Chunks.resize(RegionWidthByChunk * RegionWidthByChunk);
+			for (int z = 0; z < RegionWidthByChunk; z++) {
+				for (int x = 0; x < RegionWidthByChunk; x++) {
+					Chunks[z * RegionWidthByChunk + x].SetPosition(IntPos(
+						regionPos.x + x,
+						0,
+						regionPos.z - z
+					));
+				}
+			}
+		}
 
-	IntPos GetPosition() const { return NWCoordinate; };
+		static IntPos PlayerPosToRegionPos(const DirectX::XMFLOAT3& player) {
+			IntPos regionPos{};
+			IntPos p = IntPos{ (int)floor(player.x), (int)floor(player.y), (int)floor(player.z) };
 
-	std::vector<Chunk>& GetChunk() { return Chunks; }
+			regionPos.x = p.x >= 0 ? p.x / RegionWidthByBlock * RegionWidthByBlock
+				: -((-p.x + RegionWidthByBlock - 1) & ~(RegionWidthByBlock - 1));
+			regionPos.z = (p.z + RegionWidthByBlock - 1) & ~(RegionWidthByBlock - 1);
+			regionPos.y = 0;
+			return regionPos;
+		}
 
-	Chunk* GetChunk(IntPos worldPos) {
-		int x = abs(worldPos.x - NWCoordinate.x);
-		int y = abs(worldPos.y - NWCoordinate.y);
-		return &Chunks[y * RegionWidthByChunk + x];
+		IntPos GetPosition() const { return NWCoordinate; };
+
+		std::vector<Chunk>* GetChunks() { return &Chunks; }
+
+		Chunk& GetChunk(IntPos worldPos) {
+			int x = worldPos.x - NWCoordinate.x;
+			int z = NWCoordinate.z - worldPos.z;
+			return Chunks[z * RegionWidthByChunk + x];
+		};
+
+	private:
+		IntPos NWCoordinate;	// Northwest
+		std::vector<Chunk> Chunks;
 	};
-
-private:
-	IntPos NWCoordinate;	// Northwest
-	std::vector<Chunk> Chunks;
-
-	IntPos CalcNorthWestCoord(IntPos p) {
-		IntPos ret{};
-		if (p.x >= 0) {
-			ret.x = p.x / RegionWidthByBlock * RegionWidthByBlock;
-			if (p.y >= 0) ret.y = (p.y + RegionWidthByBlock - 1) & ~(RegionWidthByBlock - 1);
-			else ret.y = (-p.y) / RegionWidthByBlock * RegionWidthByBlock;
-		}
-		else {
-			ret.x = -((-p.x + RegionWidthByBlock - 1) & ~(RegionWidthByBlock - 1));
-			if (p.y >= 0) ret.y = (p.y + RegionWidthByBlock - 1) & ~(RegionWidthByBlock - 1);
-			else ret.y = -((-p.y) / RegionWidthByBlock * RegionWidthByBlock);
-		}
-		return ret;
-	}
-};
 }
 #endif // !_REGION_H_

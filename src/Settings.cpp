@@ -4,6 +4,7 @@ bool Settings::WireFrameMode = false;
 float Settings::CameraRadius = 2.0f;
 float Settings::CameraTheta = 1.5f * XM_PI;
 float Settings::CameraPhi = XM_PIDIV4;
+float Settings::CameraSpeed = 15.0f;
 
 void Settings::ChangeMode()
 {
@@ -12,9 +13,9 @@ void Settings::ChangeMode()
 
 void Settings::OnWheelRotate(short delta)
 {
-	float r = delta < 0 ? 0.7f : -0.7f;
+	float r = delta < 0 ? CameraSpeed : -CameraSpeed;
 	Settings::CameraRadius += r;
-	Settings::CameraRadius = Clamp(Settings::CameraRadius, 1.0f, 50.0f);
+	Settings::CameraRadius = Clamp(Settings::CameraRadius, 1.0f, 500.0f);
 }
 
 void Settings::OnMouseMove(USHORT btnFlag, int x, int y)

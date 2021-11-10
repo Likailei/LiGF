@@ -10,6 +10,7 @@ public:
 	static float CameraRadius;
 	static float CameraTheta;
 	static float CameraPhi;
+	static float CameraSpeed;
 
 	static void ChangeMode();
 	static void OnWheelRotate(short delta);

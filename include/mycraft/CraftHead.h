@@ -16,6 +16,8 @@ namespace MyCraft {
         GRASS,
         DIRT
     };
+
+    const int SeaSurfaceHeight = 63;
 }
 
 #endif // !_CRAFTHEAD_H

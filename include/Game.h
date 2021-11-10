@@ -41,7 +41,7 @@ public:
     std::vector<UINT32> m_indexCounts;
     std::vector<D3D12_VERTEX_BUFFER_VIEW> m_vBufferViews;
     std::vector<D3D12_INDEX_BUFFER_VIEW> m_iBufferViews;
-
+    Mesh ChunkMesh;
 private:
     static const UINT FrameCount = 3;
     
@@ -54,11 +54,7 @@ private:
     static const UINT TextureHeight = 512;
     static const UINT8 TexturePixelSize{ 1 };
 
-    struct Vertex
-    {
-        XMFLOAT3 position;
-        XMFLOAT2 uv;
-    };
+    
 
     Camera m_camera;
 

@@ -28,6 +28,18 @@
 
 using namespace DirectX;
 
+struct Vertex
+{
+    Vertex(float x, float y, float z, float u, float v) : position(x, y, z), uv(u, v) {}
+    XMFLOAT3 position;
+    XMFLOAT2 uv;
+};
+
+struct Mesh {
+    std::vector<Vertex> vertices;
+    std::vector<UINT> indices;
+};
+
 struct CharBufferInfo {
     wchar_t ch;
     unsigned int rows;

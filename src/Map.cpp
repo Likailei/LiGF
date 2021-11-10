@@ -12,21 +12,21 @@ void MyCraft::Map::GenerateRegion(Region* region, IntPos worldPos)
 	hmap.resize(Region::RegionWidthByBlock * Region::RegionWidthByBlock);
 	GetHmapByWorldPosition(hmap.data(), worldPos);
 
-	std::vector<Chunk>& Chunks = region->GetChunk();
-	for (int y = 0; y < Region::RegionWidthByChunk; y++) {
+	auto Chunks = region->GetChunks();
+	for (int z = 0; z < Region::RegionWidthByChunk; z++) {
 		for (int x = 0; x < Region::RegionWidthByChunk; x++) {
-			Chunk& c = Chunks[y * Region::RegionWidthByChunk + x];
-			IntPos p{};			
+			Chunk& c = Chunks->at(z * Region::RegionWidthByChunk + x);
+			/*IntPos p{};
 			p.x = region->GetPosition().x + x * Chunk::ChunkWidthByBlock;
-			p.y = region->GetPosition().y - y * Chunk::ChunkWidthByBlock;
-			c.SetPosition(p);
-			
+			p.z = region->GetPosition().z - z * Chunk::ChunkWidthByBlock;
+			c.SetPosition(p);*/
+
 			int pixelX = x * Chunk::ChunkWidthByBlock;
-			int pixelY = y * Chunk::ChunkWidthByBlock;
+			int pixelY = z * Chunk::ChunkWidthByBlock;
 			for (int j = 0; j < Chunk::ChunkWidthByBlock; j++) {
 				for (int i = 0; i < Chunk::ChunkWidthByBlock; i++) {
-					UINT8 h = hmap[(pixelY+j) * Region::RegionWidthByBlock + pixelX + i];
-					auto ptr = c.GetPtrFromRelativePosition(i, j);
+					UINT8 h = hmap[(pixelY + j) * Region::RegionWidthByBlock + pixelX + i];
+					auto ptr = c.GetColumnStartPtrByLocal(i, j);
 					for (int t = 0; t < h; t++) {
 						*(ptr + t) = MyCraft::BlockType::GRASS;
 					}
@@ -34,6 +34,95 @@ void MyCraft::Map::GenerateRegion(Region* region, IntPos worldPos)
 			}
 		}
 	}
+}
+
+void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
+{
+	// try to get the spawnregion's first chunk
+	chunkPos.x = chunkPos.z = 0;
+	Chunk& chunk = SpawnRegion->GetChunk(chunkPos);
+	auto p = chunk.GetPosition();
+
+	UINT iList[] = {
+		//front face
+		0, 1, 2,
+		0, 3, 1,
+
+		//left face
+		4, 5, 6,
+		4, 7, 5,
+
+		//right face
+		8, 9, 10,
+		8, 11, 9,
+
+		//back face
+		12, 13, 14,
+		12, 15, 13,
+
+		//top face
+		16, 17, 18,
+		16, 19, 17,
+
+		//bottom face
+		20, 21, 22,
+		20, 23, 21
+	};
+
+	UINT index = 0;
+	for (int z = 0; z < MyCraft::Chunk::ChunkWidthByBlock; z++) {
+		for (int x = 0; x < MyCraft::Chunk::ChunkWidthByBlock; x++) {
+			for (int y = 0; y < MyCraft::Chunk::ChunkHeightByBlock; y++) {
+				if (chunk.GetBlockType(IntPos(x, y, z)) == MyCraft::BlockType::GRASS) {
+					IntPos blockCoord{};
+					blockCoord.x = p.x + x;
+					blockCoord.y = p.y + y;
+					blockCoord.z = p.z - z;
+
+					//if (chunk.GetBlockType(IntPos(x, y, z - 1)) != MyCraft::BlockType::AIR){
+						//front face
+						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.0f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 1.0f,  0.5f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
+						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 1.0f,  0.0f });
+					//}
+					
+					//right side face
+					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 1.0f,  0.0f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 1.0f,  0.5f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.0f });
+					//left side face
+					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 1.0f,  0.5f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  0.5f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 1.0f,  0.0f });
+					//back face
+					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 1.0f,  0.5f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  0.5f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 1.0f,  0.0f });
+					//top face
+					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.0f,  0.5f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.0f,  0.0f });
+					//bottom face
+					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  1.0f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.0f,  0.5f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
+					chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.0f,  1.0f });
+
+					for (UINT v : iList) {
+						v += index * 24;
+						chunkMesh.indices.push_back(v);
+					}
+					index++;
+				}
+			}
+		}
+	}
+
 }
 
 void MyCraft::Map::GetHmapByWorldPosition(UINT8* hmap, IntPos worldPos)

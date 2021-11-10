@@ -11,6 +11,7 @@ class Map
 public:
 	Map(IntPos p);
 	void GenerateRegion(Region* region, IntPos worldPos);
+	void CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh);
 	Region* SpawnRegion;
 private:
 	void GetHmapByWorldPosition(UINT8* hmap, IntPos worldPos);
