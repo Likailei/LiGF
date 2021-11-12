@@ -12,8 +12,6 @@ public:
 	XMFLOAT4X4 mWVPMat;
 
 	void GetViewMat();
-	void GetWorldMat();
-	void GetRotMat(XMFLOAT3 xyz);
 
 	void Reset();
 	void OnMouseDown(WPARAM btnState, int x, int y);
@@ -22,7 +20,6 @@ public:
 	void OnMouseWheelRotate(short delta);
 
 	void SetCameraPositin(XMVECTOR camPos) { mEye = camPos; }
-	void SetObjectPosition(XMVECTOR objPos) { mObjPos = objPos; }
 	void GetTransWVPMat();
 
 private:
@@ -31,17 +28,14 @@ private:
 	XMVECTOR mEye;
 	XMVECTOR mAt;
 	XMVECTOR mUp;
-	XMVECTOR mObjPos;
 
 	XMFLOAT4X4 mProjMat;
 	XMFLOAT4X4 mViewMat;
 	XMFLOAT4X4 mWorldMat;
-	XMFLOAT4X4 mRotMat;
 
-	/*float mTheta = 1.5f * XM_PI;
-	float mPhi = XM_PIDIV4;*/
-	//float mRadius = 2.0f;
-	XMFLOAT3 mRotXYZ;
+	float mTheta = 1.5f * XM_PI;
+	float mPhi = XM_PIDIV4;
+	float mRadius = 2.0f;
 
 	POINT mMousePos;
 };

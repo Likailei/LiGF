@@ -23,6 +23,7 @@
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\d3d12\d3dx12.h" />
     <ClInclude Include="include\d3d12\DirectXMath.h" />
+    <ClInclude Include="include\ThirdPersonCamera.h" />
     <ClInclude Include="include\Font.h" />
     <ClInclude Include="include\freetype\config\ftconfig.h" />
     <ClInclude Include="include\freetype\config\ftheader.h" />
@@ -138,6 +139,7 @@
     <ClInclude Include="include\PlayerCamera.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ThirdPersonCamera.cpp" />
     <ClCompile Include="src\PlayerCamera.cpp" />
     <ClCompile Include="src\Map.cpp" />
     <ClCompile Include="src\Noise.cpp" />

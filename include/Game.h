@@ -8,7 +8,7 @@
 #include "Image.h"
 #include "Font.h"
 #include "Input.h"
-#include "Camera.h"
+#include "ThirdPersonCamera.h"
 #include "Asset.h"
 #include "Noise.h"
 #include "Map.h"
@@ -54,7 +54,7 @@ private:
 
     
 
-    Camera m_camera;
+    ThirdPersonCamera m_camera;
 
     ConstBufferObject m_constBuffer;
 

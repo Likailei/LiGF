@@ -6,6 +6,9 @@
 class Settings {
 public:
 	static bool WireFrameMode;
+	static float WalkSpeed;
+
+
 
 	static float CameraRadius;
 	static float CameraTheta;
@@ -13,7 +16,5 @@ public:
 	static float CameraSpeed;
 
 	static void ChangeMode();
-	static void OnWheelRotate(short delta);
-	static void OnMouseMove(USHORT btnFlag, int x, int y);
 };
 #endif // !_SETTINGS_H_

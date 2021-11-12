@@ -1,6 +1,6 @@
 #include "Input.h"
 
-Input::Input(Camera* c): m_camera(c)
+Input::Input(HWND h, ThirdPersonCamera* c): m_hwnd(h),m_camera(c)
 {
 	m_rawInputDevices[0].usUsagePage = 0x01;
 	m_rawInputDevices[0].usUsage = 0x02;
@@ -61,16 +61,16 @@ void Input::DispatchInput(LPARAM lParam)
                 Settings::ChangeMode();
                 break;
             case 0x57:
-                m_camera->Walk(.01f);
+                m_camera->Walk(Settings::WalkSpeed);
                 break;
             case 0x53:
-                m_camera->Walk(-.01f);
+                m_camera->Walk(-Settings::WalkSpeed);
                 break;
             case 0x41:
-                m_camera->Strafe(-.1f);
+                m_camera->Strafe(-Settings::WalkSpeed);
                 break;
             case 0x44:
-                m_camera->Strafe(.1f);
+                m_camera->Strafe(Settings::WalkSpeed);
                 break;
             default:
                 break;
@@ -94,11 +94,14 @@ void Input::DispatchInput(LPARAM lParam)
         if (raw->data.mouse.usButtonFlags == RI_MOUSE_LEFT_BUTTON_UP) m_mouseFlags.MOUSE_LBUTTON_DOWN = false;
         if (raw->data.mouse.usButtonFlags == RI_MOUSE_WHEEL) {
             short delta = raw->data.mouse.usButtonData;
-            m_camera->OnMouseWheelRotate(delta);
+            m_camera->Walk(delta*.2f);
         }
         if (m_mouseFlags.MOUSE_LBUTTON_DOWN) {
-            Settings::OnMouseMove(raw->data.mouse.usButtonFlags, (int)raw->data.mouse.lLastX, (int)raw->data.mouse.lLastY);
-            m_camera->OnMouseMove(0, (float)raw->data.mouse.lLastX, (float)raw->data.mouse.lLastY);
+            //SetCapture(m_hwnd);
+            m_camera->Shake((float)raw->data.mouse.lLastX, (float)raw->data.mouse.lLastY);
+        }
+        if (m_mouseFlags.MOUSE_LBUTTON_UP) {
+            //ReleaseCapture();
         }
         break;
     }
