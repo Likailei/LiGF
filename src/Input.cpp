@@ -1,6 +1,6 @@
 #include "Input.h"
 
-Input::Input()
+Input::Input(Camera* c): m_camera(c)
 {
 	m_rawInputDevices[0].usUsagePage = 0x01;
 	m_rawInputDevices[0].usUsage = 0x02;
@@ -41,20 +41,41 @@ RAWINPUT* const Input::GetRawInput()
 
 void Input::DispatchInput(LPARAM lParam)
 {
-    char str[100];
+    char str[200];
     RAWINPUT* raw = ParseInputData(lParam);
     switch (raw->header.dwType)
     {
     case RIM_TYPEKEYBOARD:
-        sprintf_s(str, "Kbd: make=%04x Flags:%04x Reserved:%04x ExtraInformation:%08x, msg=%04x VK=%04x \n",
+        /*sprintf_s(str, "Kbd: make=%04x Flags:%04x Reserved:%04x ExtraInformation:%08x, msg=%04x VK=%04x \n",
             raw->data.keyboard.MakeCode,
             raw->data.keyboard.Flags,
             raw->data.keyboard.Reserved,
             raw->data.keyboard.ExtraInformation,
             raw->data.keyboard.Message,
-            raw->data.keyboard.VKey);
+            raw->data.keyboard.VKey);*/
         //OutputDebugStringA(str);
-        if (raw->data.keyboard.Flags == RI_KEY_MAKE && raw->data.keyboard.VKey == VK_F3) Settings::ChangeMode();
+        if (raw->data.keyboard.Flags == RI_KEY_MAKE) {
+            switch (raw->data.keyboard.VKey)
+            {
+            case VK_F3:
+                Settings::ChangeMode();
+                break;
+            case 0x57:
+                m_camera->Walk(.01f);
+                break;
+            case 0x53:
+                m_camera->Walk(-.01f);
+                break;
+            case 0x41:
+                m_camera->Strafe(-.1f);
+                break;
+            case 0x44:
+                m_camera->Strafe(.1f);
+                break;
+            default:
+                break;
+            }
+        }
         break;
 
     case RIM_TYPEMOUSE:
@@ -73,9 +94,12 @@ void Input::DispatchInput(LPARAM lParam)
         if (raw->data.mouse.usButtonFlags == RI_MOUSE_LEFT_BUTTON_UP) m_mouseFlags.MOUSE_LBUTTON_DOWN = false;
         if (raw->data.mouse.usButtonFlags == RI_MOUSE_WHEEL) {
             short delta = raw->data.mouse.usButtonData;
-            Settings::OnWheelRotate(delta);
+            m_camera->OnMouseWheelRotate(delta);
         }
-        if(m_mouseFlags.MOUSE_LBUTTON_DOWN) Settings::OnMouseMove(raw->data.mouse.usButtonFlags, (int)raw->data.mouse.lLastX, (int)raw->data.mouse.lLastY);
+        if (m_mouseFlags.MOUSE_LBUTTON_DOWN) {
+            Settings::OnMouseMove(raw->data.mouse.usButtonFlags, (int)raw->data.mouse.lLastX, (int)raw->data.mouse.lLastY);
+            m_camera->OnMouseMove(0, (float)raw->data.mouse.lLastX, (float)raw->data.mouse.lLastY);
+        }
         break;
     }
 }

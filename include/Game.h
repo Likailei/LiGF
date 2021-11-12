@@ -28,8 +28,6 @@ public:
     
 	void OnKeyUp(UINT8 key);
     void OnMouseMove(WPARAM btnState, int x, int y);
-    void OnMouseUp(WPARAM btnState, int x, int y);
-    void OnMouseDown(WPARAM btnState, int x, int y);
     void OnMWheelRotate(short delta);
     void OnInput(LPARAM lParam);
 
@@ -44,7 +42,7 @@ public:
     Mesh ChunkMesh;
 private:
     static const UINT FrameCount = 3;
-    
+    float d = -20.f;
     UINT m_width;
     UINT m_height;
     float m_aspectRatio;

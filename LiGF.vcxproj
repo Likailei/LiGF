@@ -135,8 +135,10 @@
     <ClInclude Include="include\Input.h" />
     <ClInclude Include="include\Noise.h" />
     <ClInclude Include="include\Map.h" />
+    <ClInclude Include="include\PlayerCamera.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\PlayerCamera.cpp" />
     <ClCompile Include="src\Map.cpp" />
     <ClCompile Include="src\Noise.cpp" />
     <ClCompile Include="src\Asset.cpp" />

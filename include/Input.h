@@ -3,12 +3,13 @@
 #define _INPUT_H_
 
 #include "stdafx.h"
+#include "Camera.h"
 #include "Settings.h"
 
 class Input
 {
 public:
-	Input();
+	Input(Camera* c);
 	~Input();
 	
 	struct MouseFlags {
@@ -21,6 +22,7 @@ public:
 	RAWINPUT* const GetRawInput();
 	void DispatchInput(LPARAM lParam);
 private:
+	Camera* m_camera;
 	RAWINPUTDEVICE m_rawInputDevices[2];
 	LPBYTE m_rawInput;
 

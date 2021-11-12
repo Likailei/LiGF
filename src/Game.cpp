@@ -11,11 +11,11 @@ Game::Game(UINT width, UINT height, std::wstring name, HWND hwnd) :
 	m_frameCounter(0),
 	m_fenceValues{},
 	m_rtvDescriptorSize(0),
-	m_camera(m_hwnd, m_aspectRatio, XMVectorSet(0.0f, 0.0f, -5.0f, 0.0f))
+	m_camera(m_hwnd, m_aspectRatio, XMVectorSet(200.0f, 200.0f, -50.0f, 0.0f))
 {
 	m_imageMgr = new Image();
 	//m_fontMgr = new Font();
-	m_inputMgr = new Input();
+	m_inputMgr = new Input(&m_camera);
 }
 
 void Game::OnInit()
@@ -197,15 +197,15 @@ void Game::LoadAssets()
 
 	ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
 
-	
 
-	MyCraft::Map* map = new MyCraft::Map(IntPos{ 0, 0, 0 });	
+
+	MyCraft::Map* map = new MyCraft::Map(IntPos{ 0, 0, 0 });
 	map->CreateChunkMesh(IntPos(0, 0, 0), ChunkMesh);
 
 	const UINT vBufferSize = ChunkMesh.vertices.size() * sizeof(Vertex);
 	const UINT iBufferSize = ChunkMesh.indices.size() * sizeof(UINT);
 
-	
+
 	ComPtr<ID3D12Resource> vertexBufferUploadHeap;
 	// Vertex index buffer
 	ThrowIfFailed(m_device->CreateCommittedResource(
@@ -319,7 +319,7 @@ void Game::LoadAssets()
 	srvDesc.Texture2D.MipLevels = 1;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), FrameCount, m_cbvSrvDescriptorSize);
 	m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, srvHandle);
-	
+
 
 	// Create constant buffer view
 	for (UINT8 n = 0; n < FrameCount; ++n) {
@@ -389,17 +389,21 @@ void Game::LoadAssets()
 
 void Game::OnUpdate()
 {
-	/*XMFLOAT3 rot = XMFLOAT3(0.0f, 0.01f, 0.0f);
-	m_camera.GetRotMat(rot);*/
 
-	/*XMMATRIX scale = XMMatrixScaling(1.2000000476837158f, 1.0f, 1.2000000476837158f);
-	XMMATRIX trans = XMMatrixTranslation(0.0f, 1.8118466138839722f, 0.0f);
-	auto m = trans * scale;*/
-	//XMStoreFloat4x4(&m_constBuffer.mvpMat, XMLoadFloat4x4(&m_camera.mWVPMat) * m);
+	auto f = XMVectorSet(16.0f, 0.0f, 0.0f, 1.0f);
+	auto e = XMVectorSet(0.0f, 0.0f, d, 1.0f);
+	auto mTarget = XMVector3Normalize(XMVectorSubtract(f, e));
+	auto r = XMVector3Normalize(XMVector3Cross(XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), mTarget));
+	auto u = XMVector3Cross(mTarget, r);
+	auto v = DirectX::XMMatrixLookAtLH(e, f, XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f));
+	auto p = DirectX::XMMatrixPerspectiveFovLH(45.0f * (3.14f / 180.0f), m_aspectRatio, 1.f, 1000.0f);
 
-	m_camera.GetTransWVPMat();
-	m_constBuffer.mvpMat = m_camera.mWVPMat;
+	XMMATRIX mvp = DirectX::XMMatrixMultiply(v, p);
+	//mvp = XMMatrixIdentity();
+	//mvp.r[2] = XMVectorSet(0.f, 0.f, 0.f, 50.f);
+	XMStoreFloat4x4(&m_constBuffer.mvpMat, mvp);
 	memcpy(m_constBufferGPUAddress[m_frameIndex], &m_constBuffer, sizeof(ConstBufferObject));
+	d = d - .001f;
 }
 
 // Render the scene.
@@ -432,16 +436,6 @@ void Game::OnKeyUp(UINT8 key)
 void Game::OnMouseMove(WPARAM btnState, int x, int y)
 {
 	m_camera.OnMouseMove(btnState, x, y);
-}
-
-void Game::OnMouseUp(WPARAM btnState, int x, int y)
-{
-	m_camera.OnMouseUp(btnState, x, y);
-}
-
-void Game::OnMouseDown(WPARAM btnState, int x, int y)
-{
-	m_camera.OnMouseDown(btnState, x, y);
 }
 
 void Game::OnMWheelRotate(short delta)
