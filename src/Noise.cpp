@@ -38,7 +38,7 @@ void Noise::GenerateHMapFromPos(UINT8* data, UINT width, int x, int y)
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < width; j++) {
 			XMVECTOR p = XMVectorSet(mx, my, .0f, .0f);
-			float sum = Fbm(p * 0.001);
+			float sum = Fbm(p * 0.0005);
 			sum = (sum + 1.0f) * 255.f / 2.f;
 			UINT8 c = (UINT8)floor(sum);
 			//sums.push_back(c);

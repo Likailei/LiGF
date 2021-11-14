@@ -16,6 +16,7 @@ Game::Game(UINT width, UINT height, std::wstring name, HWND hwnd) :
 	m_imageMgr = new Image();
 	//m_fontMgr = new Font();
 	m_inputMgr = new Input(m_hwnd, &m_camera);
+	m_timer = new Timer();
 }
 
 void Game::OnInit()
@@ -197,14 +198,17 @@ void Game::LoadAssets()
 
 	ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
 
-
+	
 
 	MyCraft::Map* map = new MyCraft::Map(IntPos{ 0, 0, 0 });
-	map->CreateChunkMesh(IntPos(0, 0, 0), ChunkMesh);
+	for (int z = 0; z > -16; z -= 16) {
+		for (int x = 0; x < 16; x += 16) {
+			map->CreateChunkMesh(IntPos(x, 0, z), ChunkMesh);	
+		}
+	}
 
 	const UINT vBufferSize = ChunkMesh.vertices.size() * sizeof(Vertex);
 	const UINT iBufferSize = ChunkMesh.indices.size() * sizeof(UINT);
-
 
 	ComPtr<ID3D12Resource> vertexBufferUploadHeap;
 	// Vertex index buffer
@@ -389,23 +393,8 @@ void Game::LoadAssets()
 
 void Game::OnUpdate()
 {
-
-	//auto f = XMVectorSet(16.0f, 0.0f, 0.0f, 1.0f);
-	//auto e = XMVectorSet(0.0f, 0.0f, d, 1.0f);
-	//auto mTarget = XMVector3Normalize(XMVectorSubtract(f, e));
-	//auto r = XMVector3Normalize(XMVector3Cross(XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), mTarget));
-	//auto u = XMVector3Cross(mTarget, r);
-	//auto v = DirectX::XMMatrixLookAtLH(e, f, XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f));
-	//auto p = DirectX::XMMatrixPerspectiveFovLH(45.0f * (3.14f / 180.0f), m_aspectRatio, 1.f, 1000.0f);
-	//
-	//XMMATRIX mvp = DirectX::XMMatrixMultiply(v, p);
-	//mvp = XMMatrixIdentity();
-	//mvp.r[2] = XMVectorSet(0.f, 0.f, 0.f, 50.f);
-	//XMStoreFloat4x4(&m_constBuffer.mvpMat, mvp);
-
 	m_camera.Update(m_constBuffer.mvpMat);
 	memcpy(m_constBufferGPUAddress[m_frameIndex], &m_constBuffer, sizeof(ConstBufferObject));
-	d = d - .001f;
 }
 
 // Render the scene.
@@ -429,21 +418,6 @@ void Game::OnDestroy()
 	WaitForGpu();
 
 	CloseHandle(m_fenceEvent);
-}
-
-void Game::OnKeyUp(UINT8 key)
-{
-}
-
-void Game::OnMouseMove(WPARAM btnState, int x, int y)
-{
-	//m_camera.OnMouseMove(btnState, x, y);
-}
-
-void Game::OnMWheelRotate(short delta)
-{
-	//short delta = GET_WHEEL_DELTA_WPARAM(btnState);
-	//m_camera.OnMouseWheelRotate(delta);
 }
 
 void Game::OnInput(LPARAM lParam)

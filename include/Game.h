@@ -26,9 +26,6 @@ public:
 	virtual void OnRender();
 	virtual void OnDestroy();
     
-	void OnKeyUp(UINT8 key);
-    void OnMouseMove(WPARAM btnState, int x, int y);
-    void OnMWheelRotate(short delta);
     void OnInput(LPARAM lParam);
 
 	Image* m_imageMgr;
@@ -40,9 +37,10 @@ public:
     std::vector<D3D12_VERTEX_BUFFER_VIEW> m_vBufferViews;
     std::vector<D3D12_INDEX_BUFFER_VIEW> m_iBufferViews;
     Mesh ChunkMesh;
+    Timer* m_timer;
+
 private:
     static const UINT FrameCount = 3;
-    float d = -20.f;
     UINT m_width;
     UINT m_height;
     float m_aspectRatio;
@@ -52,10 +50,7 @@ private:
     static const UINT TextureHeight = 512;
     static const UINT8 TexturePixelSize{ 1 };
 
-    
-
     ThirdPersonCamera m_camera;
-
     ConstBufferObject m_constBuffer;
 
     // Pipeline objects.
@@ -97,7 +92,6 @@ private:
 
     void LoadPipeline();
     void LoadAssets();
-    void CreateFrameResources();
     void PopulateCommandList();
     void WaitForGpu();
     void MoveToNextFrame();

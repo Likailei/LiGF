@@ -12,8 +12,6 @@ Input::Input(HWND h, ThirdPersonCamera* c): m_hwnd(h),m_camera(c)
 	m_rawInputDevices[1].dwFlags = 0;
 	m_rawInputDevices[1].hwndTarget = 0;
 
-	//m_rawInput = reinterpret_cast<RAWINPUT*>(new UINT8[256]);
-	//m_rawInput = new BYTE[48];
 	ThrowIfFailed(RegisterRawInputDevices(m_rawInputDevices, 2, sizeof(m_rawInputDevices[0])));
 }
 
@@ -32,6 +30,23 @@ RAWINPUT* Input::ParseInputData(LPARAM lParam)
 
 	//return reinterpret_cast<RAWINPUT*>(m_rawInput)->header.dwType;
 	return reinterpret_cast<RAWINPUT*>(m_rawInput);
+}
+
+bool Input::CursorInClient()
+{
+    POINT mp;
+    RECT rectangle;
+
+    GetCursorPos(&mp);
+    GetClientRect(m_hwnd, static_cast<LPRECT>(&rectangle));
+    MapWindowPoints(m_hwnd, nullptr, reinterpret_cast<LPPOINT>(&rectangle), 2);
+
+    if (mp.x > rectangle.left && mp.x < rectangle.right) {
+        if (mp.y > rectangle.top && mp.y < rectangle.bottom) {
+            return true;
+        }
+    }
+    return false;
 }
 
 RAWINPUT* const Input::GetRawInput()
@@ -89,20 +104,17 @@ void Input::DispatchInput(LPARAM lParam)
             (long)raw->data.mouse.lLastY,
             raw->data.mouse.ulExtraInformation);
         OutputDebugStringA(str);*/
-
-        if (raw->data.mouse.usButtonFlags == RI_MOUSE_LEFT_BUTTON_DOWN) m_mouseFlags.MOUSE_LBUTTON_DOWN = true;
-        if (raw->data.mouse.usButtonFlags == RI_MOUSE_LEFT_BUTTON_UP) m_mouseFlags.MOUSE_LBUTTON_DOWN = false;
-        if (raw->data.mouse.usButtonFlags == RI_MOUSE_WHEEL) {
-            short delta = raw->data.mouse.usButtonData;
-            m_camera->Walk(delta*.2f);
-        }
-        if (m_mouseFlags.MOUSE_LBUTTON_DOWN) {
-            //SetCapture(m_hwnd);
-            m_camera->Shake((float)raw->data.mouse.lLastX, (float)raw->data.mouse.lLastY);
-        }
-        if (m_mouseFlags.MOUSE_LBUTTON_UP) {
-            //ReleaseCapture();
-        }
+        if (CursorInClient()) {
+            if (raw->data.mouse.usButtonFlags == RI_MOUSE_LEFT_BUTTON_DOWN) m_mouseFlags.MOUSE_LBUTTON_DOWN = true;
+            if (raw->data.mouse.usButtonFlags == RI_MOUSE_LEFT_BUTTON_UP) m_mouseFlags.MOUSE_LBUTTON_DOWN = false;
+            if (raw->data.mouse.usButtonFlags == RI_MOUSE_WHEEL) {
+                short delta = raw->data.mouse.usButtonData;
+                m_camera->Walk(delta * .2f);
+            }
+            if (m_mouseFlags.MOUSE_LBUTTON_DOWN) {
+                m_camera->Shake((float)raw->data.mouse.lLastX, (float)raw->data.mouse.lLastY);
+            }
+        }        
         break;
     }
 }

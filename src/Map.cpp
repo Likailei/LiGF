@@ -16,11 +16,6 @@ void MyCraft::Map::GenerateRegion(Region* region, IntPos worldPos)
 	for (int z = 0; z < Region::RegionWidthByChunk; z++) {
 		for (int x = 0; x < Region::RegionWidthByChunk; x++) {
 			Chunk& c = Chunks->at(z * Region::RegionWidthByChunk + x);
-			/*IntPos p{};
-			p.x = region->GetPosition().x + x * Chunk::ChunkWidthByBlock;
-			p.z = region->GetPosition().z - z * Chunk::ChunkWidthByBlock;
-			c.SetPosition(p);*/
-
 			int pixelX = x * Chunk::ChunkWidthByBlock;
 			int pixelY = z * Chunk::ChunkWidthByBlock;
 			for (int j = 0; j < Chunk::ChunkWidthByBlock; j++) {
@@ -39,120 +34,184 @@ void MyCraft::Map::GenerateRegion(Region* region, IntPos worldPos)
 void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
 {
 	// try to get the spawnregion's first chunk
-	chunkPos.x = chunkPos.z = 0;
-	Chunk& chunk = SpawnRegion->GetChunk(chunkPos);
-	auto p = chunk.GetPosition();
+	Chunk& chunk = SpawnRegion->GetChunkByWorldPos(chunkPos);
+	auto regionPos = SpawnRegion->GetPosition();
 
-	UINT iList[] = {
-		//front face
-		0, 1, 2,
-		0, 3, 1,
-
-		//left face
-		4, 5, 6,
-		4, 7, 5,
-
-		//right face
-		8, 9, 10,
-		8, 11, 9,
-
-		//back face
-		12, 13, 14,
-		12, 15, 13,
-
-		//top face
-		16, 17, 18,
-		16, 19, 17,
-
-		//bottom face
-		20, 21, 22,
-		20, 23, 21
-	};
-
-	UINT index = 0;
 	for (int z = 0; z < MyCraft::Chunk::ChunkWidthByBlock; z++) {
 		for (int x = 0; x < MyCraft::Chunk::ChunkWidthByBlock; x++) {
 			for (int y = 0; y < MyCraft::Chunk::ChunkHeightByBlock; y++) {
-				if (chunk.GetBlockType(IntPos(x, y, z)) == MyCraft::BlockType::GRASS) {
-					IntPos blockCoord{};
-					blockCoord.x = p.x + x;
-					blockCoord.y = p.y + y;
-					blockCoord.z = p.z - z;
+				if (chunk.GetBlockType(x, y, z) == MyCraft::BlockType::GRASS) {
+					int blockX = chunkPos.x + x;
+					int blockY = chunkPos.y + y;
+					int blockZ = chunkPos.z - z;
 
+					bool headisair = (chunk.GetBlockType(x, y + 1, z) == MyCraft::BlockType::AIR);
 					//front face
-					if (z==15 || (z<15 && chunk.GetBlockType(IntPos(x, y, z + 1)) == MyCraft::BlockType::AIR)) {
-						auto cnt = chunkMesh.vertices.size();
-						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.0f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 1.0f,  0.5f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 1.0f,  0.0f });
-						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
-						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
+					if (z == 15) {
+						if (chunkPos.z != regionPos.z - 496) {
+							int worldX = chunkPos.x + x;
+							int worldZ = chunkPos.z - z - 1;
+							if (SpawnRegion->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
+								headisair ? AddFront(chunkMesh, blockX, blockY, blockZ, 0) : AddFront(chunkMesh, blockX, blockY, blockZ, 1);
+							}
+						}
 					}
-
+					else if (chunk.GetBlockType(x, y, z + 1) == MyCraft::BlockType::AIR) {
+						headisair ? AddFront(chunkMesh, blockX, blockY, blockZ, 0) : AddFront(chunkMesh, blockX, blockY, blockZ, 1);
+					}
+					
 					//right side face
-					if (x==15 || (x<15 && chunk.GetBlockType(IntPos(x + 1, y, z)) == MyCraft::BlockType::AIR)) {
-						auto cnt = chunkMesh.vertices.size();
-						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 1.0f,  0.0f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 1.0f,  0.5f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.0f });
-						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
-						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
+					if (x == 15) {
+						if (chunkPos.x != regionPos.x + 496) {
+							int worldX = chunkPos.x + x + 1;
+							int worldZ = chunkPos.z - z;
+							if (SpawnRegion->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
+								headisair ? AddRight(chunkMesh, blockX, blockY, blockZ, 0) : AddRight(chunkMesh, blockX, blockY, blockZ, 1);
+							}
+						}
+					}
+					else if (chunk.GetBlockType(x + 1, y, z) == MyCraft::BlockType::AIR) {
+						headisair ? AddRight(chunkMesh, blockX, blockY, blockZ, 0) : AddRight(chunkMesh, blockX, blockY, blockZ, 1);
 					}
 
 					//left side face
-					if (x == 0 || ( x>0 && chunk.GetBlockType(IntPos(x - 1, y, z)) == MyCraft::BlockType::AIR)) {
-						auto cnt = chunkMesh.vertices.size();
-						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 1.0f,  0.5f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  0.5f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 1.0f,  0.0f });
-						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
-						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
+					if (x == 0) {
+						if (chunkPos.x != regionPos.x) {
+							int worldX = chunkPos.x + x - 1;
+							int worldZ = chunkPos.z - z;
+							if (SpawnRegion->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
+								headisair ? AddLeft(chunkMesh, blockX, blockY, blockZ, 0) : AddLeft(chunkMesh, blockX, blockY, blockZ, 1);
+							}
+						}
 					}
-
+					else if (chunk.GetBlockType(x - 1, y, z) == MyCraft::BlockType::AIR) {
+						headisair ? AddLeft(chunkMesh, blockX, blockY, blockZ, 0) : AddLeft(chunkMesh, blockX, blockY, blockZ, 1);
+					}
 
 					//back face
-					if (z == 0 || (z > 0 && chunk.GetBlockType(IntPos(x, y, z - 1)) == MyCraft::BlockType::AIR)) {
-						auto cnt = chunkMesh.vertices.size();
-						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 1.0f,  0.5f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  0.5f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 1.0f,  0.0f });
-						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
-						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
+					if (z == 0) {
+						if (chunkPos.z != regionPos.z) {
+							int worldX = chunkPos.x + x;
+							int worldZ = chunkPos.z - z + 1;
+							if (SpawnRegion->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
+								headisair ? AddBack(chunkMesh, blockX, blockY, blockZ, 0) : AddBack(chunkMesh, blockX, blockY, blockZ, 1);
+							}
+						}
+					}
+					else if (chunk.GetBlockType(x, y, z - 1) == MyCraft::BlockType::AIR) {
+						headisair ? AddBack(chunkMesh, blockX, blockY, blockZ, 0) : AddBack(chunkMesh, blockX, blockY, blockZ, 1);
 					}
 
-					//top face
-					if (chunk.GetBlockType(IntPos(x, y + 1, z)) == MyCraft::BlockType::AIR) {
-						auto cnt = chunkMesh.vertices.size();
-						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.0f,  0.5f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.5f,  0.0f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 1.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
-						chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 1.0f, blockCoord.z + 0.0f, 0.0f,  0.0f });
-						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
-						chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
-					}
+					////top face
+					if (chunk.GetBlockType(x, y + 1, z) == MyCraft::BlockType::AIR) AddTop(chunkMesh, blockX, blockY, blockZ);
 
 					//bottom face
-					if (y == 0 || (y>0 && chunk.GetBlockType(IntPos(x, y - 1, z)) == MyCraft::BlockType::AIR)) {
-							auto cnt = chunkMesh.vertices.size();
-							chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.5f,  1.0f });
-							chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.0f,  0.5f });
-							chunkMesh.vertices.push_back({ blockCoord.x + 1.0f,  blockCoord.y + 0.0f, blockCoord.z + -1.0f, 0.5f,  0.5f });
-							chunkMesh.vertices.push_back({ blockCoord.x + 0.0f,  blockCoord.y + 0.0f, blockCoord.z + 0.0f, 0.0f,  1.0f });
-							chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 1); chunkMesh.indices.push_back(cnt + 2);
-							chunkMesh.indices.push_back(cnt + 0); chunkMesh.indices.push_back(cnt + 3); chunkMesh.indices.push_back(cnt + 1);
-					}
+					//if ((y > 0 && chunk.GetBlockType(x, y - 1, z) == MyCraft::BlockType::AIR)) goto BOTTOM;
 				}
 			}
 		}
 	}
-
 }
 
 void MyCraft::Map::GetHmapByWorldPosition(UINT8* hmap, IntPos worldPos)
 {
 	Noise::GenerateHMapFromPos(hmap, Region::RegionWidthByBlock, worldPos.x, worldPos.y);
+}
+
+inline void MyCraft::Map::AddFront(Mesh& m, float x, float y, float z, UINT8 textureNum)
+{
+	auto cnt = m.vertices.size();
+	if (textureNum == 0) {
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.5f,  0.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 1.0f,  0.5f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 1.0f,  0.0f });
+	}
+	else if(textureNum == 1) {
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.5f,  1.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.0f,  0.5f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.0f,  1.0f });
+	}
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
+}
+
+inline void MyCraft::Map::AddBack(Mesh& m, float x, float y, float z, UINT8 textureNum)
+{
+	auto cnt = m.vertices.size();
+	if (textureNum == 0) {
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 0.5f,  0.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 1.0f,  0.5f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 0.5f,  0.5f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 1.0f,  0.0f });
+	}
+	else if (textureNum == 1) {
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 0.5f,  1.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 0.0f,  0.5f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 0.5f,  0.5f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 0.0f,  1.0f });
+	}
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
+}
+
+inline void MyCraft::Map::AddLeft(Mesh& m, float x, float y, float z, UINT8 textureNum)
+{
+	auto cnt = m.vertices.size();
+	if (textureNum == 0) {
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 0.5f,  0.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 1.0f,  0.5f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 0.5f,  0.5f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 1.0f,  0.0f });
+	}
+	else if (textureNum == 1) {
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f,  0.5f,  1.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.0f,  0.5f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f,  0.5f,  0.5f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.0f,  1.0f });
+	}
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
+}
+
+inline void MyCraft::Map::AddRight(Mesh& m, float x, float y, float z, UINT8 textureNum)
+{
+	auto cnt = m.vertices.size();
+	if (textureNum == 0) {
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 1.0f,  0.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 1.0f,  0.5f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.5f,  0.0f });
+	}
+	else if (textureNum == 1) {
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.5f,  1.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f,  0.0f,  0.5f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f,  0.5f,  0.5f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.0f,  1.0f });
+	}	
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
+}
+
+inline void MyCraft::Map::AddTop(Mesh& m, float x, float y, float z)
+{
+	auto cnt = m.vertices.size();
+	m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.0f,  0.5f });
+	m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 0.5f,  0.0f });
+	m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.5f,  0.5f });
+	m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 0.0f,  0.0f });
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
+}
+
+inline void MyCraft::Map::AddBottom(Mesh& m, float x, float y, float z)
+{
+	auto cnt = m.vertices.size();
+	m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 0.5f,  1.0f });
+	m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.0f,  0.5f });
+	m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f });
+	m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 0.0f,  1.0f });
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
 }

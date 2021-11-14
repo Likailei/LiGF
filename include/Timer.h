@@ -9,12 +9,10 @@ public:
 	Timer();
 	~Timer();
 
-	void Tick();
+	double Tick();
 	long long GetFrequency();
 	SYSTEMTIME GetStartUTC();
-	double GetLastElapsedTime();
 private:
-
 	long long m_frequency;
 	SYSTEMTIME m_startUTC;
 	long long m_startCounts;

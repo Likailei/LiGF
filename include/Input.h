@@ -28,6 +28,7 @@ private:
 	LPBYTE m_rawInput;
 
 	RAWINPUT* ParseInputData(LPARAM lParam);
+	bool CursorInClient();
 };
 
 #endif // !_INPUT_H_

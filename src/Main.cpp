@@ -52,9 +52,16 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		return 0;
 
 	case WM_PAINT:
+	{
+		pGame->m_timer->Tick();
 		pGame->OnUpdate();
 		pGame->OnRender();
+		auto t = pGame->m_timer->Tick();
+		char str[45];
+		sprintf_s(str, "LiGF FPS: %.2f FrameTime: %.3f ms", 1000.0/t, t);
+		SetWindowTextA(hWnd, str);
 		return 0;
+	}
 
 	case WM_DESTROY:				
 		PostQuitMessage(0);

@@ -20,13 +20,12 @@ private:
 							   : abs(worldPos.z) % ChunkWidthByBlock;
 		local.y = worldPos.y;
 		return local;
-
 	}
 
 public:
-	static const UINT ChunkWidthByBlock = 16;
-	static const UINT ChunkHeightByBlock = 256;
-	static const UINT ChunkBlockAmount = ChunkWidthByBlock * ChunkWidthByBlock * ChunkHeightByBlock;
+	static const INT ChunkWidthByBlock = 16;
+	static const INT ChunkHeightByBlock = 256;
+	static const INT ChunkBlockAmount = ChunkWidthByBlock * ChunkWidthByBlock * ChunkHeightByBlock;
 
 	Chunk() {
 		Blocks.resize(ChunkBlockAmount, BlockType::AIR);
@@ -51,9 +50,9 @@ public:
 		return Blocks.data() + z * ChunkWidthByBlock * ChunkHeightByBlock + x * ChunkHeightByBlock;
 	}
 
-	BlockType GetBlockType(IntPos local) {
+	BlockType GetBlockType(int x, int y, int z) {
 		//auto local = WorldToLocal(worldPos);
-		return Blocks[local.z * ChunkWidthByBlock * ChunkHeightByBlock + local.x * ChunkHeightByBlock + local.y];
+		return Blocks[z * ChunkWidthByBlock * ChunkHeightByBlock + x * ChunkHeightByBlock + y];
 	}
 
 };
