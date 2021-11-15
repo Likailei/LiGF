@@ -15,13 +15,15 @@ public:
 	void CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh);
 	Region* SpawnRegion;
 private:
+	Noise* m_Noise;
+
 	void GetHmapByWorldPosition(UINT8* hmap, IntPos worldPos);
-	inline void AddFront(Mesh& m, float x, float y, float z, UINT8 textureNum);
-	inline void AddBack(Mesh& m, float x, float y, float z, UINT8 textureNum);
-	inline void AddLeft(Mesh& m, float x, float y, float z, UINT8 textureNum);
-	inline void AddRight(Mesh& m, float x, float y, float z, UINT8 textureNum);
-	inline void AddTop(Mesh& m, float x, float y, float z);
-	inline void AddBottom(Mesh& m, float x, float y, float z);
+	inline void AddFront(Mesh& m, int x, int y, int z, UINT8 textureNum);
+	inline void AddBack(Mesh& m, int x, int y, int z, UINT8 textureNum);
+	inline void AddLeft(Mesh& m, int x, int y, int z, UINT8 textureNum);
+	inline void AddRight(Mesh& m, int x, int y, int z, UINT8 textureNum);
+	inline void AddTop(Mesh& m, int x, int y, int z);
+	inline void AddBottom(Mesh& m, int x, int y, int z);
 };
 }
 

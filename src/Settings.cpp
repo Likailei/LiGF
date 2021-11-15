@@ -1,7 +1,7 @@
 #include "Settings.h"
 
 bool Settings::WireFrameMode = false;
-float Settings::WalkSpeed = .8f;
+float Settings::WalkSpeed = 1.5f;
 
 
 float Settings::CameraRadius = 2.0f;

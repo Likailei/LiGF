@@ -2,6 +2,7 @@
 
 MyCraft::Map::Map(IntPos p)
 {
+	m_Noise = new Noise();
 	SpawnRegion = new Region(p);
 	GenerateRegion(SpawnRegion, p);
 }
@@ -33,7 +34,7 @@ void MyCraft::Map::GenerateRegion(Region* region, IntPos worldPos)
 
 void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
 {
-	// try to get the spawnregion's first chunk
+	// try the spawn region
 	Chunk& chunk = SpawnRegion->GetChunkByWorldPos(chunkPos);
 	auto regionPos = SpawnRegion->GetPosition();
 
@@ -59,7 +60,7 @@ void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
 					else if (chunk.GetBlockType(x, y, z + 1) == MyCraft::BlockType::AIR) {
 						headisair ? AddFront(chunkMesh, blockX, blockY, blockZ, 0) : AddFront(chunkMesh, blockX, blockY, blockZ, 1);
 					}
-					
+
 					//right side face
 					if (x == 15) {
 						if (chunkPos.x != regionPos.x + 496) {
@@ -115,103 +116,103 @@ void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
 
 void MyCraft::Map::GetHmapByWorldPosition(UINT8* hmap, IntPos worldPos)
 {
-	Noise::GenerateHMapFromPos(hmap, Region::RegionWidthByBlock, worldPos.x, worldPos.y);
+	m_Noise->GenerateHMapFromPos(hmap, Region::RegionWidthByBlock, worldPos.x, worldPos.y);
 }
 
-inline void MyCraft::Map::AddFront(Mesh& m, float x, float y, float z, UINT8 textureNum)
+inline void MyCraft::Map::AddFront(Mesh& m, int x, int y, int z, UINT8 textureNum)
 {
-	auto cnt = m.vertices.size();
+	UINT cnt = (UINT)m.vertices.size();
 	if (textureNum == 0) {
-		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.5f,  0.0f });
-		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 1.0f,  0.5f });
-		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f });
-		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 1.0f,  0.0f });
-	}
-	else if(textureNum == 1) {
-		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.5f,  1.0f });
-		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.0f,  0.5f });
-		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f });
-		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.0f,  1.0f });
-	}
-	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
-	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
-}
-
-inline void MyCraft::Map::AddBack(Mesh& m, float x, float y, float z, UINT8 textureNum)
-{
-	auto cnt = m.vertices.size();
-	if (textureNum == 0) {
-		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 0.5f,  0.0f });
-		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 1.0f,  0.5f });
-		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 0.5f,  0.5f });
-		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 1.0f,  0.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.5f,  0.0f, 0.0f, 0.0f, -1.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 1.0f,  0.5f, 0.0f, 0.0f, -1.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f, 0.0f, 0.0f, -1.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 1.0f,  0.0f, 0.0f, 0.0f, -1.0f });
 	}
 	else if (textureNum == 1) {
-		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 0.5f,  1.0f });
-		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 0.0f,  0.5f });
-		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 0.5f,  0.5f });
-		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 0.0f,  1.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.5f,  1.0f, 0.0f, 0.0f, -1.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.0f,  0.5f, 0.0f, 0.0f, -1.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f, 0.0f, 0.0f, -1.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.0f,  1.0f, 0.0f, 0.0f, -1.0f });
 	}
 	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
 	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
 }
 
-inline void MyCraft::Map::AddLeft(Mesh& m, float x, float y, float z, UINT8 textureNum)
+inline void MyCraft::Map::AddBack(Mesh& m, int x, int y, int z, UINT8 textureNum)
 {
-	auto cnt = m.vertices.size();
+	UINT cnt = (UINT)m.vertices.size();
 	if (textureNum == 0) {
-		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 0.5f,  0.0f });
-		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 1.0f,  0.5f });
-		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 0.5f,  0.5f });
-		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 1.0f,  0.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 0.5f,  0.0f, 0.0f, 0.0f, 1.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 1.0f,  0.5f, 0.0f, 0.0f, 1.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 0.5f,  0.5f, 0.0f, 0.0f, 1.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 1.0f,  0.0f, 0.0f, 0.0f, 1.0f });
 	}
 	else if (textureNum == 1) {
-		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f,  0.5f,  1.0f });
-		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.0f,  0.5f });
-		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f,  0.5f,  0.5f });
-		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.0f,  1.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 0.5f,  1.0f, 0.0f, 0.0f, 1.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 0.0f,  0.5f, 0.0f, 0.0f, 1.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 0.5f,  0.5f, 0.0f, 0.0f, 1.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 0.0f,  1.0f, 0.0f, 0.0f, 1.0f });
 	}
 	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
 	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
 }
 
-inline void MyCraft::Map::AddRight(Mesh& m, float x, float y, float z, UINT8 textureNum)
+inline void MyCraft::Map::AddLeft(Mesh& m, int x, int y, int z, UINT8 textureNum)
 {
-	auto cnt = m.vertices.size();
+	UINT cnt = (UINT)m.vertices.size();
 	if (textureNum == 0) {
-		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f });
-		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 1.0f,  0.0f });
-		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 1.0f,  0.5f });
-		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.5f,  0.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 0.5f,   0.0f, -1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 1.0f,  0.5f, -1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 0.5f,   0.5f, -1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 1.0f,  0.0f, -1.0f, 0.0f, 0.0f });
 	}
 	else if (textureNum == 1) {
-		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.5f,  1.0f });
-		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f,  0.0f,  0.5f });
-		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f,  0.5f,  0.5f });
-		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.0f,  1.0f });
-	}	
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f,  0.5f,  1.0f, -1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.0f,  0.5f, -1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f,  0.5f,  0.5f, -1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.0f,  1.0f, -1.0f, 0.0f, 0.0f });
+	}
 	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
 	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
 }
 
-inline void MyCraft::Map::AddTop(Mesh& m, float x, float y, float z)
+inline void MyCraft::Map::AddRight(Mesh& m, int x, int y, int z, UINT8 textureNum)
 {
-	auto cnt = m.vertices.size();
-	m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.0f,  0.5f });
-	m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 0.5f,  0.0f });
-	m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.5f,  0.5f });
-	m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 0.0f,  0.0f });
+	UINT cnt = (UINT)m.vertices.size();
+	if (textureNum == 0) {
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f, 1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 1.0f,   0.0f, 1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 1.0f,   0.5f, 1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.5f,  0.0f, 1.0f, 0.0f, 0.0f });
+	}
+	else if (textureNum == 1) {
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.5f,  1.0f, 1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f,  0.0f,  0.5f, 1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f });
+		m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.0f,  1.0f, 1.0f, 0.0f, 0.0f });
+	}
 	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
 	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
 }
 
-inline void MyCraft::Map::AddBottom(Mesh& m, float x, float y, float z)
+inline void MyCraft::Map::AddTop(Mesh& m, int x, int y, int z)
 {
-	auto cnt = m.vertices.size();
-	m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 0.5f,  1.0f });
-	m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.0f,  0.5f });
-	m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f });
-	m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 0.0f,  1.0f });
+	UINT cnt = (UINT)m.vertices.size();
+	m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + -1.0f, 0.0f,  0.5f, 0.0f, 1.0f, 0.0f });
+	m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + 0.0f, 0.5f,   0.0f, 0.0f, 1.0f, 0.0f });
+	m.vertices.push_back({ x + 1.0f,  y + 1.0f, z + -1.0f, 0.5f,  0.5f, 0.0f, 1.0f, 0.0f });
+	m.vertices.push_back({ x + 0.0f,  y + 1.0f, z + 0.0f, 0.0f,   0.0f, 0.0f, 1.0f, 0.0f });
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
+	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
+}
+
+inline void MyCraft::Map::AddBottom(Mesh& m, int x, int y, int z)
+{
+	UINT cnt = (UINT)m.vertices.size();
+	m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + 0.0f, 0.5f,   1.0f, 0.0f, -1.0f, 0.0f });
+	m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + -1.0f, 0.0f,  0.5f, 0.0f, -1.0f, 0.0f });
+	m.vertices.push_back({ x + 1.0f,  y + 0.0f, z + -1.0f, 0.5f,  0.5f, 0.0f, -1.0f, 0.0f });
+	m.vertices.push_back({ x + 0.0f,  y + 0.0f, z + 0.0f, 0.0f,   1.0f, 0.0f, -1.0f, 0.0f });
 	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 1); m.indices.push_back(cnt + 2);
 	m.indices.push_back(cnt + 0); m.indices.push_back(cnt + 3); m.indices.push_back(cnt + 1);
 }

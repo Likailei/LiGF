@@ -1,8 +1,8 @@
 #include "Noise.h"
-#include <algorithm>
-using namespace DirectX;
 
-double Noise::m_Seed = 43758.5453123;
+Noise::Noise(float seed) : m_Seed(seed)
+{
+}
 
 void Noise::GeneratePerlinNoiseHMap(UINT8* data, UINT width, UINT height, double octave)
 {
@@ -38,7 +38,7 @@ void Noise::GenerateHMapFromPos(UINT8* data, UINT width, int x, int y)
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < width; j++) {
 			XMVECTOR p = XMVectorSet(mx, my, .0f, .0f);
-			float sum = Fbm(p * 0.0005);
+			float sum = Fbm(p * 0.0005f);
 			sum = (sum + 1.0f) * 255.f / 2.f;
 			UINT8 c = (UINT8)floor(sum);
 			//sums.push_back(c);
@@ -46,7 +46,7 @@ void Noise::GenerateHMapFromPos(UINT8* data, UINT width, int x, int y)
 			index++;
 			mx += 1.f;
 		}
-		mx = x;
+		mx = (float)x;
 		my += 1.f;
 	}
 
@@ -58,7 +58,7 @@ XMVECTOR Noise::Hash(const XMVECTOR& p)
 {
 	XMVECTOR v = XMVectorSet(XMVectorGetX(XMVector2Dot(p, XMVectorSet(127.1f, 311.7f, .0f, .0f))),
 		XMVectorGetX(XMVector2Dot(p, XMVectorSet(269.5f, 183.3f, .0f, .0f))), .0f, .0f);
-	v = XMVectorSin(v) * GetSeed();
+	v = XMVectorSin(v) * m_Seed;
 	v = v - XMVectorFloor(v);
 	return XMVectorSet(XMVectorGetX(v) * 2.f - 1.f, XMVectorGetY(v) * 2.f - 1.f, .0f, .0f);
 }
@@ -119,7 +119,7 @@ float Noise::PerlinNoise(const XMVECTOR& p)
 
 float Noise::Fbm(XMVECTOR& p)
 {
-	double f = 0.0;
+	float f = 0.0;
 	p = p * 4.0f;
 	f += 1.0000f * PerlinNoise(p); p = p * 2.0f;
 	f += 0.5000f * PerlinNoise(p); p = p * 2.0f;

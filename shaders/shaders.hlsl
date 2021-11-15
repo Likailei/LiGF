@@ -10,31 +10,45 @@
 //*********************************************************
 struct PSInput
 {
-    float4 position : SV_POSITION;
-    float2 uv : TEXCOORD;
+	float4 position : SV_POSITION;
+	float2 uv : TEXCOORD;
+	float3 normal : NORMAL;
 };
 
 Texture2D g_texture : register(t0);
 SamplerState g_sampler : register(s0);
 
+static float3 g_sunPos = float3(5000.f, 5000.f, -1000.f);
+static float g_ambientStrength = 0.1f;
+static float3 g_sunColor = float3(1.f, 1.f, 1.f);
+
 cbuffer constantObj : register(b0)
 {
-    float4x4 wvpMat;
+	float4x4 wvpMat;
 };
 
-PSInput VSMain(float4 position : POSITION, float2 uv : TEXCOORD)
+PSInput VSMain(float4 position : POSITION, float2 uv : TEXCOORD, float3 normal : NORMAL)
 {
-    PSInput result;
+	PSInput result;
 
-    result.position = mul(position, wvpMat);
-    result.uv = uv;
+	result.position = mul(position, wvpMat);
+	result.uv = uv;
+	result.normal = normal;
 
-    return result;
+	return result;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    float3 color = g_texture.Sample(g_sampler, input.uv);
+	float3 objColor = g_texture.Sample(g_sampler, input.uv);
 
-    return float4(color, 1.0f);
+	float3 ambient = g_ambientStrength * g_sunColor;
+
+	float3 lightDir = g_sunPos - input.position.xyz;
+	float d = max(dot(normalize(lightDir), input.normal), 0.f);
+	float3 diffuse = d * g_sunColor;
+
+	float3 color = objColor * (ambient + diffuse);
+
+	return float4(color, 1.f);
 }

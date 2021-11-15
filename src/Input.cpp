@@ -56,7 +56,7 @@ RAWINPUT* const Input::GetRawInput()
 
 void Input::DispatchInput(LPARAM lParam)
 {
-    char str[200];
+   // char str[200];
     RAWINPUT* raw = ParseInputData(lParam);
     switch (raw->header.dwType)
     {

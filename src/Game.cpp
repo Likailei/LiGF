@@ -27,6 +27,12 @@ void Game::OnInit()
 
 void Game::LoadPipeline()
 {
+	ComPtr<ID3D12Debug> debugController;
+	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+	{
+		debugController->EnableDebugLayer();
+	}
+
 	UINT dxgiFactoryFlags = 0;
 	ComPtr<IDXGIFactory4> factory;
 	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
@@ -163,7 +169,8 @@ void Game::LoadAssets()
 	ComPtr<ID3DBlob> vertexShader;
 	ComPtr<ID3DBlob> pixelShader;
 
-	UINT compileFlags = 0;
+	UINT compileFlags = D3DCOMPILE_ENABLE_STRICTNESS |
+		D3DCOMPILE_IEEE_STRICTNESS | D3DCOMPILE_DEBUG;
 	ThrowIfFailed(D3DCompileFromFile(L"./shaders/shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
 	ThrowIfFailed(D3DCompileFromFile(L"./shaders/shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
@@ -171,7 +178,8 @@ void Game::LoadAssets()
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	// Describe and create the graphics pipeline state object (PSO).
@@ -201,8 +209,8 @@ void Game::LoadAssets()
 	
 
 	MyCraft::Map* map = new MyCraft::Map(IntPos{ 0, 0, 0 });
-	for (int z = 0; z > -16; z -= 16) {
-		for (int x = 0; x < 16; x += 16) {
+	for (int z = 0; z > -64; z -= 16) {
+		for (int x = 0; x < 64; x += 16) {
 			map->CreateChunkMesh(IntPos(x, 0, z), ChunkMesh);	
 		}
 	}
@@ -339,10 +347,6 @@ void Game::LoadAssets()
 		ThrowIfFailed(m_constBufferUploadHeaps[n]->Map(0, &range, reinterpret_cast<void**>(&m_constBufferGPUAddress[n])));
 
 		memset(&m_constBuffer, 0, sizeof(ConstBufferObject));
-		/*XMMATRIX scale = XMMatrixScaling(1.0f, 3.413419723510742, 1.0f);
-		XMMATRIX trans = XMMatrixTranslation(1.0f, 1.0f, 1.0f);
-		auto m = scale * trans;
-		XMStoreFloat4x4(&m_constBuffer.mvpMat, m);*/
 		memcpy(m_constBufferGPUAddress[n], &m_constBuffer, sizeof(ConstBufferObject));
 	}
 

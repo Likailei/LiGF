@@ -23,16 +23,19 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <algorithm>
 #include <wrl.h>
+
 #include "Settings.h"
 
 using namespace DirectX;
 
 struct Vertex
 {
-    Vertex(float x, float y, float z, float u, float v) : position(x, y, z), uv(u, v) {}
+    Vertex(float x, float y, float z, float u, float v, float nx, float ny, float nz) : position(x, y, z), uv(u, v), normal(nx,ny,nz) {}
     XMFLOAT3 position;
     XMFLOAT2 uv;
+    XMFLOAT3 normal;
 };
 
 struct Mesh {
@@ -71,6 +74,7 @@ struct TextureInfo {
 
 struct ConstBufferObject {
     XMFLOAT4X4 mvpMat;
+    float padding[48];
 };
 
 inline void ThrowIfFailed(HRESULT hr)
