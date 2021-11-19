@@ -1,9 +1,5 @@
 #include "Noise.h"
 
-Noise::Noise(float seed) : m_Seed(seed)
-{
-}
-
 void Noise::GeneratePerlinNoiseHMap(UINT8* data, UINT width, UINT height, double octave)
 {
 	int index = 0;
@@ -29,29 +25,24 @@ void Noise::GeneratePerlinNoiseHMap(UINT8* data, UINT width, UINT height, double
 	}
 }
 
-void Noise::GenerateHMapFromPos(UINT8* data, UINT width, int x, int y)
+void Noise::GenerateHMapFromPos(UINT8* data, UINT width, int originX, int originY)
 {
 	int index = 0;
-	float mx = (float)(x - x % width);
-	float my = (float)(y - y % width);
-	//std::vector<UINT8> sums;
+	float x = (float)originX;
+	float y = (float)originY;
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < width; j++) {
-			XMVECTOR p = XMVectorSet(mx, my, .0f, .0f);
+			XMVECTOR p = XMVectorSet(x, y, .0f, .0f);
 			float sum = Fbm(p * 0.0005f);
 			sum = (sum + 1.0f) * 255.f / 2.f;
 			UINT8 c = (UINT8)floor(sum);
-			//sums.push_back(c);
 			data[index] = c;
 			index++;
-			mx += 1.f;
+			x += 1.f;
 		}
-		mx = (float)x;
-		my += 1.f;
+		x = (float)originX;
+		y -= 1.f;
 	}
-
-	//std::sort(sums.begin(), sums.end());
-
 }
 
 XMVECTOR Noise::Hash(const XMVECTOR& p)

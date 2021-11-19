@@ -18,8 +18,8 @@ struct PSInput
 Texture2D g_texture : register(t0);
 SamplerState g_sampler : register(s0);
 
-static float3 g_sunPos = float3(5000.f, 5000.f, -1000.f);
-static float g_ambientStrength = 0.1f;
+static float3 g_sunPos = float3(50000.f, 50000.f, -50000.f);
+static float g_ambientStrength = 0.3f;
 static float3 g_sunColor = float3(1.f, 1.f, 1.f);
 
 cbuffer constantObj : register(b0)

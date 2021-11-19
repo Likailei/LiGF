@@ -139,6 +139,7 @@
     <ClInclude Include="include\PlayerCamera.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\mycraft\Region.cpp" />
     <ClCompile Include="src\ThirdPersonCamera.cpp" />
     <ClCompile Include="src\PlayerCamera.cpp" />
     <ClCompile Include="src\Map.cpp" />
@@ -153,9 +154,6 @@
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Settings.cpp" />
     <ClCompile Include="src\Timer.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="TODO.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

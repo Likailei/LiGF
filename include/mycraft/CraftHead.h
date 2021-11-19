@@ -7,6 +7,7 @@
 #include <DirectXMath.h>
 
 typedef DirectX::XMINT3 IntPos;
+typedef DirectX::XMFLOAT3 PlayerPos;
 
 namespace MyCraft {
     // https://minecraft-ids.grahamedgecombe.com/

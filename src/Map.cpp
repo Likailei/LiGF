@@ -1,42 +1,30 @@
 #include "Map.h"
 
-MyCraft::Map::Map(IntPos p)
+MyCraft::Map::Map(float seed) : m_Seed(seed)
 {
-	m_Noise = new Noise();
-	SpawnRegion = new Region(p);
-	GenerateRegion(SpawnRegion, p);
+	m_Noise = new Noise(seed);
 }
 
-void MyCraft::Map::GenerateRegion(Region* region, IntPos worldPos)
+void MyCraft::Map::GetAroundMesh(PlayerPos p, Mesh& m)
 {
-	std::vector<UINT8> hmap;
-	hmap.resize(Region::RegionWidthByBlock * Region::RegionWidthByBlock);
-	GetHmapByWorldPosition(hmap.data(), worldPos);
+	// TODO: find if THE region exits.
+	Region* r = new Region(p, m_Noise);
 
-	auto Chunks = region->GetChunks();
-	for (int z = 0; z < Region::RegionWidthByChunk; z++) {
-		for (int x = 0; x < Region::RegionWidthByChunk; x++) {
-			Chunk& c = Chunks->at(z * Region::RegionWidthByChunk + x);
-			int pixelX = x * Chunk::ChunkWidthByBlock;
-			int pixelY = z * Chunk::ChunkWidthByBlock;
-			for (int j = 0; j < Chunk::ChunkWidthByBlock; j++) {
-				for (int i = 0; i < Chunk::ChunkWidthByBlock; i++) {
-					UINT8 h = hmap[(pixelY + j) * Region::RegionWidthByBlock + pixelX + i];
-					auto ptr = c.GetColumnStartPtrByLocal(i, j);
-					for (int t = 0; t < h; t++) {
-						*(ptr + t) = MyCraft::BlockType::GRASS;
-					}
-				}
-			}
+	IntPos centerPos = Region::PlayerToChunk(p);
+	IntPos topLeftPos = IntPos{ centerPos.x - Chunk::ChunkWidthByBlock, 0, centerPos.z + Chunk::ChunkWidthByBlock };
+	for (int z = 0; z < 3; z++) {
+		for (int x = 0; x < 3; x++) {
+			IntPos o{ topLeftPos.x + Chunk::ChunkWidthByBlock * x, 0, topLeftPos.z - Chunk::ChunkWidthByBlock * z };
+			CreateChunkMesh(r, o, m);
 		}
 	}
+
 }
 
-void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
+void MyCraft::Map::CreateChunkMesh(Region* region, IntPos chunkPos, Mesh& chunkMesh)
 {
-	// try the spawn region
-	Chunk& chunk = SpawnRegion->GetChunkByWorldPos(chunkPos);
-	auto regionPos = SpawnRegion->GetPosition();
+	Chunk& chunk = region->GetChunkByWorldPos(chunkPos);
+	auto regionPos = region->GetPosition();
 
 	for (int z = 0; z < MyCraft::Chunk::ChunkWidthByBlock; z++) {
 		for (int x = 0; x < MyCraft::Chunk::ChunkWidthByBlock; x++) {
@@ -46,19 +34,19 @@ void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
 					int blockY = chunkPos.y + y;
 					int blockZ = chunkPos.z - z;
 
-					bool headisair = (chunk.GetBlockType(x, y + 1, z) == MyCraft::BlockType::AIR);
+					bool topisair = (chunk.GetBlockType(x, y + 1, z) == MyCraft::BlockType::AIR);
 					//front face
 					if (z == 15) {
 						if (chunkPos.z != regionPos.z - 496) {
 							int worldX = chunkPos.x + x;
 							int worldZ = chunkPos.z - z - 1;
-							if (SpawnRegion->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
-								headisair ? AddFront(chunkMesh, blockX, blockY, blockZ, 0) : AddFront(chunkMesh, blockX, blockY, blockZ, 1);
+							if (region->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
+								topisair ? AddFront(chunkMesh, blockX, blockY, blockZ, 0) : AddFront(chunkMesh, blockX, blockY, blockZ, 1);
 							}
 						}
 					}
 					else if (chunk.GetBlockType(x, y, z + 1) == MyCraft::BlockType::AIR) {
-						headisair ? AddFront(chunkMesh, blockX, blockY, blockZ, 0) : AddFront(chunkMesh, blockX, blockY, blockZ, 1);
+						topisair ? AddFront(chunkMesh, blockX, blockY, blockZ, 0) : AddFront(chunkMesh, blockX, blockY, blockZ, 1);
 					}
 
 					//right side face
@@ -66,13 +54,13 @@ void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
 						if (chunkPos.x != regionPos.x + 496) {
 							int worldX = chunkPos.x + x + 1;
 							int worldZ = chunkPos.z - z;
-							if (SpawnRegion->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
-								headisair ? AddRight(chunkMesh, blockX, blockY, blockZ, 0) : AddRight(chunkMesh, blockX, blockY, blockZ, 1);
+							if (region->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
+								topisair ? AddRight(chunkMesh, blockX, blockY, blockZ, 0) : AddRight(chunkMesh, blockX, blockY, blockZ, 1);
 							}
 						}
 					}
 					else if (chunk.GetBlockType(x + 1, y, z) == MyCraft::BlockType::AIR) {
-						headisair ? AddRight(chunkMesh, blockX, blockY, blockZ, 0) : AddRight(chunkMesh, blockX, blockY, blockZ, 1);
+						topisair ? AddRight(chunkMesh, blockX, blockY, blockZ, 0) : AddRight(chunkMesh, blockX, blockY, blockZ, 1);
 					}
 
 					//left side face
@@ -80,13 +68,13 @@ void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
 						if (chunkPos.x != regionPos.x) {
 							int worldX = chunkPos.x + x - 1;
 							int worldZ = chunkPos.z - z;
-							if (SpawnRegion->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
-								headisair ? AddLeft(chunkMesh, blockX, blockY, blockZ, 0) : AddLeft(chunkMesh, blockX, blockY, blockZ, 1);
+							if (region->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
+								topisair ? AddLeft(chunkMesh, blockX, blockY, blockZ, 0) : AddLeft(chunkMesh, blockX, blockY, blockZ, 1);
 							}
 						}
 					}
 					else if (chunk.GetBlockType(x - 1, y, z) == MyCraft::BlockType::AIR) {
-						headisair ? AddLeft(chunkMesh, blockX, blockY, blockZ, 0) : AddLeft(chunkMesh, blockX, blockY, blockZ, 1);
+						topisair ? AddLeft(chunkMesh, blockX, blockY, blockZ, 0) : AddLeft(chunkMesh, blockX, blockY, blockZ, 1);
 					}
 
 					//back face
@@ -94,13 +82,13 @@ void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
 						if (chunkPos.z != regionPos.z) {
 							int worldX = chunkPos.x + x;
 							int worldZ = chunkPos.z - z + 1;
-							if (SpawnRegion->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
-								headisair ? AddBack(chunkMesh, blockX, blockY, blockZ, 0) : AddBack(chunkMesh, blockX, blockY, blockZ, 1);
+							if (region->GetTypeByWorldPos(worldX, y, worldZ) == MyCraft::BlockType::AIR) {
+								topisair ? AddBack(chunkMesh, blockX, blockY, blockZ, 0) : AddBack(chunkMesh, blockX, blockY, blockZ, 1);
 							}
 						}
 					}
 					else if (chunk.GetBlockType(x, y, z - 1) == MyCraft::BlockType::AIR) {
-						headisair ? AddBack(chunkMesh, blockX, blockY, blockZ, 0) : AddBack(chunkMesh, blockX, blockY, blockZ, 1);
+						topisair ? AddBack(chunkMesh, blockX, blockY, blockZ, 0) : AddBack(chunkMesh, blockX, blockY, blockZ, 1);
 					}
 
 					////top face
@@ -112,11 +100,6 @@ void MyCraft::Map::CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh)
 			}
 		}
 	}
-}
-
-void MyCraft::Map::GetHmapByWorldPosition(UINT8* hmap, IntPos worldPos)
-{
-	m_Noise->GenerateHMapFromPos(hmap, Region::RegionWidthByBlock, worldPos.x, worldPos.y);
 }
 
 inline void MyCraft::Map::AddFront(Mesh& m, int x, int y, int z, UINT8 textureNum)

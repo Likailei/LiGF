@@ -10,14 +10,16 @@ namespace MyCraft {
 class Map
 {
 public:
-	Map(IntPos p);
-	void GenerateRegion(Region* region, IntPos worldPos);
-	void CreateChunkMesh(IntPos chunkPos, Mesh& chunkMesh);
-	Region* SpawnRegion;
+	Map(float seed);
+	void GetAroundMesh(PlayerPos p, Mesh& m);
+	
 private:
 	Noise* m_Noise;
+	float m_Seed;
+	std::vector<Region> m_Regions;
 
-	void GetHmapByWorldPosition(UINT8* hmap, IntPos worldPos);
+	void CreateChunkMesh(Region* region, IntPos chunkPos, Mesh& chunkMesh);
+
 	inline void AddFront(Mesh& m, int x, int y, int z, UINT8 textureNum);
 	inline void AddBack(Mesh& m, int x, int y, int z, UINT8 textureNum);
 	inline void AddLeft(Mesh& m, int x, int y, int z, UINT8 textureNum);

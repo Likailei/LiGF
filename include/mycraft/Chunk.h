@@ -8,7 +8,7 @@ namespace MyCraft
 {
 class Chunk {
 private:
-	IntPos NWCoordinate;
+	IntPos Origin;
 	std::vector<BlockType> Blocks;
 
 	IntPos WorldToLocal(const IntPos& worldPos){
@@ -31,11 +31,11 @@ public:
 		Blocks.resize(ChunkBlockAmount, BlockType::AIR);
 	};
 
-	Chunk(IntPos p) : NWCoordinate(p) {
+	Chunk(IntPos p) : Origin(p) {
 		Blocks.resize(ChunkBlockAmount, BlockType::AIR);
 	}
-	IntPos GetPosition() const { return NWCoordinate; }
-	void SetPosition(IntPos p) { NWCoordinate = p; }
+	IntPos GetPosition() const { return Origin; }
+	void SetPosition(IntPos p) { Origin = p; }
 
 	void SetBlockTypeByLocalPos(const IntPos& localPos, MyCraft::BlockType type){
 		Blocks[localPos.z * ChunkWidthByBlock * ChunkHeightByBlock + localPos.x * ChunkHeightByBlock + localPos.y] = type;
@@ -51,7 +51,6 @@ public:
 	}
 
 	BlockType GetBlockType(int x, int y, int z) {
-		//auto local = WorldToLocal(worldPos);
 		return Blocks[z * ChunkWidthByBlock * ChunkHeightByBlock + x * ChunkHeightByBlock + y];
 	}
 

@@ -8,18 +8,18 @@
 class Noise
 {
 public:
-	Noise() {};
-	Noise(float seed);
+	Noise(float seed) :m_Seed(seed) {};
 	void GeneratePerlinNoiseHMap(UINT8* data, UINT width, UINT height, double octave);
-	void GenerateHMapFromPos(UINT8* data, UINT width, int x, int y);
+	void GenerateHMapFromPos(UINT8* data, UINT width, int originX, int originY);
 
 private:
-	float m_Seed = 43758.545312f;
+	float m_Seed;
 	XMVECTOR Hash(const XMVECTOR& p);
 	XMVECTOR Fade(const XMVECTOR& p);
-	inline float Interp(float a, float b, float t);
 	float PerlinNoise(const XMVECTOR& p);
 	float Fbm(XMVECTOR& p);
+
+	inline float Interp(float a, float b, float t);
 };
 
 #endif

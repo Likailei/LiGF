@@ -11,7 +11,7 @@ Game::Game(UINT width, UINT height, std::wstring name, HWND hwnd) :
 	m_frameCounter(0),
 	m_fenceValues{},
 	m_rtvDescriptorSize(0),
-	m_camera(m_aspectRatio, XMFLOAT3(0.0f, 100.0f, -50.0f))
+	m_camera(m_aspectRatio, XMFLOAT3(50.f, 200.f, 50.f))
 {
 	m_imageMgr = new Image();
 	//m_fontMgr = new Font();
@@ -208,12 +208,8 @@ void Game::LoadAssets()
 
 	
 
-	MyCraft::Map* map = new MyCraft::Map(IntPos{ 0, 0, 0 });
-	for (int z = 0; z > -64; z -= 16) {
-		for (int x = 0; x < 64; x += 16) {
-			map->CreateChunkMesh(IntPos(x, 0, z), ChunkMesh);	
-		}
-	}
+	MyCraft::Map* map = new MyCraft::Map(43758.545312f);
+	map->GetAroundMesh(PlayerPos(-50.f, 200.f, -70.f), ChunkMesh);
 
 	const UINT vBufferSize = ChunkMesh.vertices.size() * sizeof(Vertex);
 	const UINT iBufferSize = ChunkMesh.indices.size() * sizeof(UINT);
